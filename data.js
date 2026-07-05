@@ -262,10 +262,10 @@
     writeJSON(LS.tags, DEFAULT_TAGS);
     writeJSON(LS.posts, DEFAULT_POSTS);
     writeJSON(LS.media, []);
-    localStorage.setItem(LS.auth, "admin123");
+    localStorage.setItem(LS.auth, "karyzza"); 
     writeJSON(LS.seeded, true);
   }
-
+/*localStorage.setItem(LS.auth, "karyzza"); password*/
   /* ----------------------------- CMS ------------------------------ */
   const CMS = {
     /* ---- lifecycle ---- */
