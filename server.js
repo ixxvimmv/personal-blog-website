@@ -13,8 +13,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/noonereads';
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_ultra_secure_editorial_secret_key';
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sanctuary';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'ixxvimmv';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'karyzza';
 
 // Create local temporary storage directory if missing
 if (!fs.existsSync('./uploads')) {
@@ -88,18 +88,23 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
    BACKEND REST API ENDPOINTS
 =================================================================== */
 app.post('/api/auth/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = await User.findOne({ username });
-  if (!user) {
-    return res.status(400).json({ message: 'Invalid admin credentials.' });
-  }
-  
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return res.status(400).json({ message: 'Invalid admin credentials.' });
-  }
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials profile lookup.' });
+    }
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials secret match failure.' });
+    }
 
-  res.json({ token: jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' }) });
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json({ message: 'Internal validation sub-routine exception.' });
+  }
 });
 
 app.get('/api/public/categories', async (req, res) => res.json(await Category.find()));
@@ -135,8 +140,8 @@ app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
    SYSTEM INCEPTION & DATABASE SEEDING
 =================================================================== */
 const runDatabaseSeeding = async () => {
-  // If your old password seed was unhashed, uncomment the line below ONCE to clear it:
-  // await User.deleteMany({}); 
+  // Line 125: Wipes out lingering plain-text records on deployment startup.
+  await User.deleteMany({}); 
 
   if ((await User.countDocuments()) === 0) {
     const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
