@@ -13,8 +13,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/noonereads';
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_ultra_secure_editorial_secret_key';
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'ixxvimmv';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'karyzza';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sanctuary';
 
 // Create local temporary storage directory if missing
 if (!fs.existsSync('./uploads')) {
