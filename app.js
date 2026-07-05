@@ -1,6 +1,6 @@
 let STATE_CATEGORIES = [];
 let STATE_POSTS = [];
-const API_URL = window.location.origin;
+const API_URL = 'https://personal-blog-website-ryp1.onrender.com';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('inrt_token');
