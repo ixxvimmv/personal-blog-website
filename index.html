@@ -303,11 +303,15 @@ function viewHome(){
 }
 
 function viewAbout(){
+  const settings = CMS.getSettings();
+  const avatarHtml = settings.aboutPhoto
+    ? `<img class="avatar-mark avatar-photo" src="${settings.aboutPhoto}" alt="Portrait of the writer" data-reveal>`
+    : `<div class="avatar-mark" data-reveal aria-hidden="true">IN</div>`;
   return `
   <section class="section">
     <div class="wrap">
       <div class="about-hero">
-        <div class="avatar-mark" data-reveal aria-hidden="true">C</div>
+        ${avatarHtml}
         <div data-reveal>
           <p class="eyebrow">About the writer</p>
           <h1>I write things down so I don't have to carry them alone.</h1>
@@ -315,7 +319,7 @@ function viewAbout(){
         </div>
       </div>
       <div class="prose" data-reveal style="margin-top:40px;">
-        <p>I've kept some form of journal since year 2020, mostly out of necessity rather than discipline — I've always needed to write things down before I fully understood how I felt about them.</p>
+        <p>I've kept some form of journal since I was thirteen, mostly out of necessity rather than discipline — I've always needed to write things down before I fully understood how I felt about them.</p>
         <p>The name comes from the only way I've ever been able to write anything honest: by half-convincing myself no one would actually read it. If No One Reads This is what happened when I got tired of being the only reader of things I suspected other people might need too.</p>
         <p class="pull-line">"I'm not trying to have the last word on anything. I'm just trying to say the true thing before I forget what it felt like."</p>
         <p>What you'll find here is a mix: letters, personal reflections, journal entries kept mostly intact, a handful of poems, and short stories that are fiction in name only.</p>
