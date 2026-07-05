@@ -30,12 +30,12 @@ function escapeHtml(str) { return str ? str.replace(/[&<>"']/g, c => ({ '&': '&a
 =================================================================== */
 function viewHome() {
   const featured = STATE_POSTS.filter(p => p.featured);
-  const recent = STATE_POSTS.slice(0, 3);
+  const recent = STATE_POSTS.slice(0, 10);
   return `
   <section class="hero"><div class="wrap"><h1>Words, kept slowly, for whoever needs to read them.</h1></div></section>
   <section class="section"><div class="wrap"><h2>Featured writings</h2>
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:30px;">
-      ${featured.map(p => `
+      ${featured.length === 0 ? '<p style="color:var(--text-muted); font-size:14px;">No featured manuscripts locked.</p>' : featured.map(p => `
         <div style="background:var(--bg-alt); padding:24px; border:1px solid var(--border);">
           <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">${fmtDate(p.date)} · ${cat(p.category).name}</div>
           <h3 style="font-family:'Fraunces'; font-size:22px; margin:0 0 10px;"><a href="#/post/${p.slug}" style="color:inherit; text-decoration:none;">${escapeHtml(p.title)}</a></h3>
@@ -45,13 +45,13 @@ function viewHome() {
     </div>
   </div></section>
   <section class="section" style="border-top:1px solid var(--border);"><div class="wrap"><h2>All logs</h2>
-    <div>${recent.map(p => `<div style="padding:16px 0; border-bottom:1px solid var(--border);"><span style="font-size:13px; color:var(--text-muted); margin-right:20px;">${fmtDate(p.date)}</span><a href="#/post/${p.slug}" style="color:inherit; font-family:'Fraunces'; font-size:18px; text-decoration:none; font-weight:500;">${escapeHtml(p.title)}</a></div>`).join('')}</div>
+    <div>${recent.length === 0 ? '<p style="color:var(--text-muted); font-size:14px;">Writers desk collection is empty.</p>' : recent.map(p => `<div style="padding:16px 0; border-bottom:1px solid var(--border);"><span style="font-size:13px; color:var(--text-muted); margin-right:20px;">${fmtDate(p.date)}</span><a href="#/post/${p.slug}" style="color:inherit; font-family:'Fraunces'; font-size:18px; text-decoration:none; font-weight:500;">${escapeHtml(p.title)}</a></div>`).join('')}</div>
   </div></section>`;
 }
 
 function viewPost(params) {
   const post = STATE_POSTS.find(p => p.slug === params.slug);
-  if (!post) return `<div class="wrap"><h2>Manuscript processing layout error. Missing log.</h2></div>`;
+  if (!post) return `<div class="wrap" style="padding:80px 20px; text-align:center;"><h2>Manuscript processing layout error. Missing log.</h2><a href="#/">Return home</a></div>`;
   return `
   <article class="wrap" style="padding:60px 20px;">
     <div style="text-align:center; margin-bottom:40px;">
@@ -62,7 +62,7 @@ function viewPost(params) {
     <div style="font-family:'Lora', serif; font-size:18px; line-height:1.8; max-width:650px; margin:0 auto;" class="article-body">
       ${post.body.map(b => `<p style="margin-bottom:24px;">${escapeHtml(b)}</p>`).join('')}
     </div>
-  </article>\`;
+  </article>`;
 }
 
 function viewAdminLogin() {
@@ -90,7 +90,7 @@ async function viewAdminDashboard() {
       </div>
     </div>
     <div style="display:flex; flex-direction:column; gap:15px;">
-      ${posts.map(p => `
+      ${posts.length === 0 ? '<p style="color:var(--text-muted);">No logs drafted yet.</p>' : posts.map(p => `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; border:1px solid var(--border); background:var(--bg-alt);">
           <div><strong>${escapeHtml(p.title)}</strong> <span style="font-size:11px; text-transform:uppercase; margin-left:10px; padding:2px 6px; background:#ddd;">${p.status}</span></div>
           <div>
@@ -138,7 +138,7 @@ async function deletePostTarget(id) {
 /* ===================================================================
    CLIENT CORE ROUTER
 =================================================================== */
-const routes = { '/': viewHome, '/writings': viewHome, '/admin/dashboard': viewAdminDashboard, '/admin/write': () => viewAdminEditor(null) };
+const routes = { '/': viewHome, '/admin/dashboard': viewAdminDashboard, '/admin/write': () => viewAdminEditor(null) };
 
 function matchRoute(hash) {
   if (hash.startsWith('/admin/edit/')) return { handler: () => viewAdminEditor(hash.replace('/admin/edit/', '')) };
