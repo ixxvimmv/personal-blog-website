@@ -471,6 +471,8 @@ function viewPost(params){
 
   document.getElementById('doc-title').textContent = (post.seoTitle || post.title) + " — If No One Reads This";
   document.getElementById('doc-desc').setAttribute('content', post.metaDescription || post.excerpt || '');
+  CMS.recordView(post.slug);
+  const viewCount = CMS.getViewsForPost(post.slug);
 
   return `
   <article>
@@ -480,6 +482,7 @@ function viewPost(params){
         <div class="post-meta-row" data-reveal>
           <span>${fmtDate(post.publishDate)}</span><span class="sep">·</span><span>${CMS.readingTime(post.content)} min read</span>
           ${showUpdated ? `<span class="sep">·</span><span class="updated-note">Updated ${fmtDate(post.updatedAt)}</span>` : ''}
+          <span class="sep">·</span><span>${viewCount.toLocaleString()} view${viewCount===1?'':'s'}</span>
         </div>
         <h1 data-reveal>${post.title}</h1>
         ${post.subtitle ? `<p class="subtitle" data-reveal>${post.subtitle}</p>` : ''}
