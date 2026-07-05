@@ -19,7 +19,9 @@
     media: "inrt_media",
     auth: "inrt_auth_password",
     seeded: "inrt_seeded_v1",
+    views: "inrt_views_log",
   };
+  const MAX_VIEW_LOG = 5000;
   const SESSION_KEY = "inrt_admin_session";
 
   /* ---------------------------- utils ---------------------------- */
@@ -439,6 +441,72 @@
     },
     changePassword(newPass) {
       localStorage.setItem(LS.auth, newPass);
+    },
+
+    /* ---- analytics / page views ----
+       Honest limitation: there is no server here, so this only records
+       views that happen in *this* browser (e.g. yours, while testing,
+       or a visitor's own browser if you deploy this statically without
+       a backend). It cannot see who visited from other devices. It's a
+       real, working view counter — just a client-side one. */
+    recordView(slug, meta) {
+      const log = readJSON(LS.views, []);
+      log.push({
+        id: uid("view"),
+        slug: slug,
+        ts: nowIso(),
+        ref: (meta && meta.ref) || (document.referrer ? new URL(document.referrer).hostname : "Direct"),
+        device: (meta && meta.device) || (/Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop"),
+      });
+      if (log.length > MAX_VIEW_LOG) log.splice(0, log.length - MAX_VIEW_LOG);
+      writeJSON(LS.views, log);
+    },
+    getViewsLog() {
+      return readJSON(LS.views, []);
+    },
+    getViewsForPost(slug) {
+      return this.getViewsLog().filter((v) => v.slug === slug).length;
+    },
+    getTotalViews() {
+      return this.getViewsLog().length;
+    },
+    getTopPosts(limit) {
+      const counts = {};
+      this.getViewsLog().forEach((v) => (counts[v.slug] = (counts[v.slug] || 0) + 1));
+      const posts = this.getAllPosts();
+      return Object.keys(counts)
+        .map((slug) => ({ post: posts.find((p) => p.slug === slug), slug, views: counts[slug] }))
+        .filter((x) => x.post)
+        .sort((a, b) => b.views - a.views)
+        .slice(0, limit || 5);
+    },
+    getRecentViews(limit) {
+      return [...this.getViewsLog()].reverse().slice(0, limit || 20);
+    },
+    getViewsByDay(days) {
+      const n = days || 14;
+      const buckets = [];
+      const now = new Date();
+      for (let i = n - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        buckets.push({ date: d.toISOString().slice(0, 10), count: 0 });
+      }
+      const map = {};
+      buckets.forEach((b) => (map[b.date] = b));
+      this.getViewsLog().forEach((v) => {
+        const day = v.ts.slice(0, 10);
+        if (map[day]) map[day].count++;
+      });
+      return buckets;
+    },
+    getReferrerBreakdown() {
+      const counts = {};
+      this.getViewsLog().forEach((v) => (counts[v.ref] = (counts[v.ref] || 0) + 1));
+      return Object.entries(counts).map(([ref, count]) => ({ ref, count })).sort((a, b) => b.count - a.count);
+    },
+    clearViews() {
+      writeJSON(LS.views, []);
     },
 
     /* ---- helpers exposed for views ---- */
