@@ -70,9 +70,9 @@ function viewAdminLogin() {
   <section class="section" style="max-width:400px; margin:80px auto; padding:20px; border:1px solid var(--border); background:var(--bg-alt);">
     <form id="admin-login-form">
       <h2 style="font-family:'Fraunces'; margin-bottom:20px;">Desk Verification</h2>
-      <div style="margin-bottom:15px;"><label style="display:block; font-size:12px; margin-bottom:4px;">Identifier</label><input type="text" id="adm-user" required style="width:100%; padding:8px; border:1px solid var(--border);"></div>
-      <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; margin-bottom:4px;">Key Token Phrase</label><input type="password" id="adm-pass" required style="width:100%; padding:8px; border:1px solid var(--border);"></div>
-      <button type="submit" style="background:var(--text); color:white; border:none; padding:10px 16px; width:100%; cursor:pointer;">Authenticate Key</button>
+      <div style="margin-bottom:15px;"><label style="display:block; font-size:12px; margin-bottom:4px;">Username</label><input type="text" id="adm-user" required style="width:100%; padding:8px; border:1px solid var(--border);"></div>
+      <div style="margin-bottom:20px;"><label style="display:block; font-size:12px; margin-bottom:4px;">Password</label><input type="password" id="adm-pass" required style="width:100%; padding:8px; border:1px solid var(--border);"></div>
+      <button type="submit" style="background:var(--text); color:white; border:none; padding:10px 16px; width:100%; cursor:pointer;">Submit</button>
     </form>
   </section>`;
 }
