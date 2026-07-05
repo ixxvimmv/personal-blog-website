@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — If No One Reads This</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Lora:ital,wght@0,400;0,500;0,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-body">
+
+<div id="app"></div>
+<div id="toast"></div>
+<div id="modal-root"></div>
+
+<script src="data.js"></script>
+<script>
+CMS.init();
+
+/* ===================================================================
+   SMALL HELPERS
+=================================================================== */
+function escapeHtml(str){ return String(str||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(iso){ if(!iso) return "—"; return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fmtDateTimeInput(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window.__toastT);
+  window.__toastT = setTimeout(() => el.classList.remove('show'), 2600);
+}
+function computeStatus(post){
+  if (post.status === 'draft') return 'draft';
+  if (post.status === 'published' && new Date(post.publishDate) > new Date()) return 'scheduled';
+  return post.status; // published
+}
+function statusBadge(post){
+  const s = computeStatus(post);
+  const label = s === 'scheduled' ? 'Scheduled' : s === 'draft' ? 'Draft' : 'Published';
+  return `<span class="badge badge-${s}">${label}</span>`;
+}
+
+/* ===================================================================
+   MODAL / CONFIRM
+=================================================================== */
+function openModal(html){
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-overlay open" id="modal-overlay"><div class="modal-box">${html}</div></div>`;
+  document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target.id === 'modal-overlay') closeModal(); });
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML = ''; }
+function confirmAction(message, onConfirm){
+  openModal(`
+    <h3>Are you sure?</h3>
+    <p style="font-family:var(--sans);font-size:14px;color:var(--text-muted);">${message}</p>
+    <div class="modal-actions">
+      <button class="btn ghost" id="confirm-cancel">Cancel</button>
+      <button class="btn danger" id="confirm-ok">Delete</button>
+    </div>
+  `);
+  document.getElementById('confirm-cancel').addEventListener('click', closeModal);
+  document.getElementById('confirm-ok').addEventListener('click', () => { onConfirm(); closeModal(); });
+}
+
+/* ===================================================================
+   ROUTER
+=================================================================== */
+const routes = {};
+function route(pattern, handler){ routes[pattern] = handler; }
+function matchRoute(path){
+  for (const pattern in routes){
+    const parts = pattern.split('/').filter(Boolean);
+    const pathParts = path.split('/').filter(Boolean);
+    if (parts.length !== pathParts.length) continue;
+    const params = {};
+    let ok = true;
+    for (let i=0;i<parts.length;i++){
+      if (parts[i].startsWith(':')) params[parts[i].slice(1)] = decodeURIComponent(pathParts[i]);
+      else if (parts[i] !== pathParts[i]) { ok = false; break; }
+    }
+    if (ok) return { handler: routes[pattern], params };
+  }
+  return null;
+}
+const PUBLIC_ROUTES = ['/login'];
+
+function render(){
+  const hash = location.hash.replace(/^#/, '') || '/dashboard';
+  const app = document.getElementById('app');
+
+  if (!CMS.isAuthed() && !PUBLIC_ROUTES.includes(hash)){
+    location.hash = '/login';
+    return;
+  }
+  if (CMS.isAuthed() && hash === '/login'){
+    location.hash = '/dashboard';
+    return;
+  }
+
+  if (hash === '/login'){
+    app.innerHTML = viewLogin();
+    wireLogin();
+    return;
+  }
+
+  const match = matchRoute(hash);
+  const body = match ? match.handler(match.params) : `<div class="admin-empty">Page not found. <a href="#/dashboard">Back to dashboard</a></div>`;
+  app.innerHTML = adminShell(body, hash);
+  wireShell();
+  const routeKey = '/' + hash.split('/').filter(Boolean).slice(0,2).join('/');
+  if (wireMap[routeKey]) wireMap[routeKey](match ? match.params : {});
+}
+
+/* ===================================================================
+   SHELL (sidebar + topbar)
+=================================================================== */
+function adminShell(innerHtml, hash){
+  const active = '/' + (hash.split('/')[1] || 'dashboard');
+  const navItem = (path, label, icon) => `<a href="#${path}" class="${active===path?'active':''}">${icon}<span>${label}</span></a>`;
+  return `
+  <div class="admin-shell">
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="brand-mark">If No One Reads This</div>
+      <nav class="admin-nav">
+        ${navItem('/dashboard','Dashboard','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>')}
+        ${navItem('/writings','Writings','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>')}
+        ${navItem('/categories','Categories','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>')}
+        ${navItem('/tags','Tags','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>')}
+        ${navItem('/media','Media Library','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>')}
+      </nav>
+      <div class="admin-sidebar-foot">
+        <a href="index.html" class="view-site-link" target="_blank">↗ View live site</a>
+        <a href="#" id="logout-link">⏻ Log out</a>
+      </div>
+    </aside>
+    <div class="admin-main">
+      <button class="icon-btn admin-mobile-toggle" id="admin-mobile-toggle" aria-label="Toggle menu" style="margin-bottom:16px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      ${innerHtml}
+    </div>
+  </div>`;
+}
+function wireShell(){
+  document.getElementById('logout-link').addEventListener('click', e => { e.preventDefault(); CMS.logout(); location.hash = '/login'; });
+  const toggle = document.getElementById('admin-mobile-toggle');
+  if (toggle) toggle.addEventListener('click', () => document.getElementById('admin-sidebar').classList.toggle('open'));
+}
+
+/* ===================================================================
+   LOGIN VIEW
+=================================================================== */
+function viewLogin(){
+  return `
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="brand-mark">If No One Reads This</div>
+      <p class="lede-sm">Admin dashboard — sign in to manage your writing.</p>
+      <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+      <div class="field-group">
+        <label class="field-label" for="login-pass">Password</label>
+        <input class="field-input" type="password" id="login-pass" placeholder="Enter admin password" autofocus>
+      </div>
+      <button class="btn" style="width:100%;justify-content:center;" id="login-btn">Sign in</button>
+      <p class="login-hint">Demo password: <strong>admin123</strong><br>Stored only in this browser's localStorage — there is no real server-side auth here.</p>
+    </div>
+  </div>`;
+}
+function wireLogin(){
+  const btn = document.getElementById('login-btn');
+  const input = document.getElementById('login-pass');
+  function tryLogin(){
+    if (CMS.login(input.value)){
+      location.hash = '/dashboard';
+    } else {
+      document.getElementById('login-error').classList.add('show');
+    }
+  }
+  btn.addEventListener('click', tryLogin);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+}
+
+/* ===================================================================
+   DASHBOARD VIEW
+=================================================================== */
+function viewDashboard(){
+  const posts = CMS.getAllPosts();
+  const published = posts.filter(p => computeStatus(p) === 'published');
+  const drafts = posts.filter(p => computeStatus(p) === 'draft');
+  const scheduled = posts.filter(p => computeStatus(p) === 'scheduled');
+  const cats = CMS.getCategories();
+  const tags = CMS.getTags();
+  const recent = [...posts].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0,6);
+
+  return `
+  <div class="admin-topbar"><h1>Dashboard</h1><a class="btn" href="#/writings/new">+ New writing</a></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num">${posts.length}</div><div class="stat-label">Total writings</div></div>
+    <div class="stat-card"><div class="stat-num">${published.length}</div><div class="stat-label">Published</div></div>
+    <div class="stat-card"><div class="stat-num">${drafts.length}</div><div class="stat-label">Drafts</div></div>
+    <div class="stat-card"><div class="stat-num">${scheduled.length}</div><div class="stat-label">Scheduled</div></div>
+    <div class="stat-card"><div class="stat-num">${cats.length}</div><div class="stat-label">Categories</div></div>
+  </div>
+  <div class="admin-panel">
+    <h3>Recent activity</h3>
+    ${recent.length ? recent.map(p => `
+      <div class="activity-row">
+        <span><a href="#/writings/edit/${p.id}" style="text-decoration:none;color:inherit;">${p.title}</a> ${statusBadge(p)}</span>
+        <span>updated ${fmtDate(p.updatedAt)}</span>
+      </div>`).join('') : `<div class="admin-empty">No activity yet.</div>`}
+  </div>
+  <div class="admin-panel">
+    <h3>At a glance</h3>
+    <div class="activity-row"><span>Tags in use</span><span>${tags.length}</span></div>
+    <div class="activity-row"><span>Featured writings</span><span>${posts.filter(p=>p.featured).length}</span></div>
+    <div class="activity-row"><span>Media items uploaded</span><span>${CMS.getMedia().length}</span></div>
+  </div>
+  `;
+}
+
+/* ===================================================================
+   WRITINGS LIST VIEW
+=================================================================== */
+function viewWritingsList(){
+  const posts = [...CMS.getAllPosts()].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  return `
+  <div class="admin-topbar"><h1>Writings</h1><a class="btn" href="#/writings/new">+ New writing</a></div>
+  <div class="admin-panel" style="padding:0;">
+    <div class="table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Published</th><th>Updated</th><th></th></tr></thead>
+      <tbody id="writings-tbody">
+        ${posts.length ? posts.map(p => `
+        <tr data-id="${p.id}">
+          <td class="title-cell">${p.title}${p.featured ? ' ★' : ''}<span class="sub">/${p.slug}</span></td>
+          <td>${(CMS.getCategory(p.category)||{}).name || '—'}</td>
+          <td>${statusBadge(p)}</td>
+          <td>${fmtDate(p.publishDate)}</td>
+          <td>${fmtDate(p.updatedAt)}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn-icon" href="#/writings/edit/${p.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+              <button class="btn-icon" data-dup="${p.id}" title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button class="btn-icon" data-del="${p.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </td>
+        </tr>`).join('') : `<tr><td colspan="6"><div class="admin-empty">No writings yet. <a href="#/writings/new">Create your first one</a>.</div></td></tr>`}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+}
+function wireWritingsList(){
+  const tbody = document.getElementById('writings-tbody');
+  if (!tbody) return;
+  tbody.addEventListener('click', e => {
+    const dup = e.target.closest('[data-dup]');
+    const del = e.target.closest('[data-del]');
+    if (dup){ CMS.duplicatePost(dup.dataset.dup); toast('Writing duplicated as a draft.'); render(); }
+    if (del){
+      confirmAction('This will permanently delete this writing.', () => {
+        CMS.deletePost(del.dataset.del);
+        toast('Writing deleted.');
+        render();
+      });
+    }
+  });
+}
+
+/* ===================================================================
+   RICH TEXT EDITOR
+=================================================================== */
+function editorToolbarHtml(){
+  const btn = (cmd, label, svg, arg) => `<button type="button" data-cmd="${cmd}" data-arg="${arg||''}" title="${label}">${svg}</button>`;
+  return `<div class="editor-toolbar">
+    ${btn('formatBlock','Heading','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M18 4v16M6 12h12"/></svg>','H2')}
+    ${btn('bold','Bold','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h8a4 4 0 0 1 0 8H6zM6 12h9a4 4 0 0 1 0 8H6z"/></svg>')}
+    ${btn('italic','Italic','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>')}
+    ${btn('underline','Underline','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v7a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>')}
+    <div class="sep"></div>
+    ${btn('insertUnorderedList','Bullet list','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>')}
+    ${btn('insertOrderedList','Numbered list','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>')}
+    ${btn('formatBlock','Blockquote','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21c3 0 7-1 7-8V5H3v10h4c0 3-1 5-4 5zm11 0c3 0 7-1 7-8V5h-7v10h4c0 3-1 5-4 5z"/></svg>','BLOCKQUOTE')}
+    ${btn('formatBlock','Code block','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>','PRE')}
+    <div class="sep"></div>
+    ${btn('createLink','Link','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>')}
+    ${btn('insertImage','Image','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>')}
+    ${btn('insertHorizontalRule','Horizontal line','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="12" x2="20" y2="12"/></svg>')}
+  </div>`;
+}
+function wireEditor(surfaceId, toolbarEl){
+  const surface = document.getElementById(surfaceId);
+  toolbarEl.querySelectorAll('button[data-cmd]').forEach(btn => {
+    btn.addEventListener('mousedown', e => e.preventDefault()); // keep focus/selection in editor
+    btn.addEventListener('click', () => {
+      surface.focus();
+      const cmd = btn.dataset.cmd;
+      if (cmd === 'createLink'){
+        const url = prompt('Link URL:', 'https://');
+        if (url) document.execCommand('createLink', false, url);
+        return;
+      }
+      if (cmd === 'insertImage'){
+        openImagePicker(dataUrl => {
+          surface.focus();
+          document.execCommand('insertImage', false, dataUrl);
+        });
+        return;
+      }
+      document.execCommand(cmd, false, btn.dataset.arg || undefined);
+    });
+  });
+}
+
+/* ===================================================================
+   IMAGE PICKER MODAL (used by editor + cover image field)
+=================================================================== */
+function openImagePicker(onSelect){
+  const media = CMS.getMedia();
+  openModal(`
+    <h3>Select or upload an image</h3>
+    <div class="media-dropzone" id="picker-dropzone">Click to upload a new image, or choose one below</div>
+    <input type="file" id="picker-file" accept="image/*" style="display:none;">
+    <div class="media-grid" id="picker-grid">
+      ${media.map(m => `<div class="media-item" data-select="${m.id}"><img src="${m.dataUrl}" alt=""><div class="media-name">${escapeHtml(m.name)}</div></div>`).join('') || `<div class="admin-empty">No images uploaded yet.</div>`}
+    </div>
+    <div class="modal-actions"><button class="btn ghost" id="picker-cancel">Cancel</button></div>
+  `);
+  document.getElementById('picker-cancel').addEventListener('click', closeModal);
+  document.getElementById('picker-dropzone').addEventListener('click', () => document.getElementById('picker-file').click());
+  document.getElementById('picker-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const saved = CMS.saveMedia({ name: file.name, dataUrl: reader.result });
+      onSelect(saved.dataUrl);
+      closeModal();
+      toast('Image uploaded.');
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('picker-grid').addEventListener('click', e => {
+    const item = e.target.closest('[data-select]');
+    if (item){
+      const m = media.find(x => x.id === item.dataset.select);
+      if (m){ onSelect(m.dataUrl); closeModal(); }
+    }
+  });
+}
+
+/* ===================================================================
+   WRITING EDITOR VIEW (create + edit)
+=================================================================== */
+function viewWritingEditor(params){
+  const isEdit = !!params.id;
+  const post = isEdit ? CMS.getPostById(params.id) : null;
+  if (isEdit && !post) return `<div class="admin-empty">Writing not found. <a href="#/writings">Back to writings</a></div>`;
+  const cats = CMS.getCategories();
+  const tags = CMS.getTags();
+  const p = post || { title:'', subtitle:'', content:'', category: cats[0]?.slug || '', tags:[], coverImage:'', status:'draft', featured:false, seoTitle:'', metaDescription:'', slug:'', publishDate:'' };
+
+  return `
+  <div class="admin-topbar">
+    <h1>${isEdit ? 'Edit writing' : 'New writing'}</h1>
+    <div style="display:flex;gap:10px;">
+      <a class="btn ghost" href="#/writings">Cancel</a>
+      <button class="btn ghost" id="save-draft-btn">Save draft</button>
+      <button class="btn" id="publish-btn">${p.status==='published' && new Date(p.publishDate) <= new Date() ? 'Update' : 'Publish'}</button>
+    </div>
+  </div>
+
+  <div class="admin-form-grid">
+    <div>
+      <div class="admin-panel">
+        <div class="field-group">
+          <label class="field-label" for="f-title">Title</label>
+          <input class="field-input" id="f-title" value="${escapeHtml(p.title)}" placeholder="A working title">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="f-subtitle">Subtitle <span style="font-weight:400;color:var(--text-faint);">(optional)</span></label>
+          <input class="field-input" id="f-subtitle" value="${escapeHtml(p.subtitle)}" placeholder="A short subtitle">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Content</label>
+          ${editorToolbarHtml()}
+          <div class="editor-surface" id="f-content" contenteditable="true" data-placeholder="Start writing…">${p.content || ''}</div>
+        </div>
+      </div>
+
+      <div class="admin-panel">
+        <h3>SEO &amp; metadata</h3>
+        <div class="field-group">
+          <label class="field-label" for="f-slug">URL slug</label>
+          <input class="field-input" id="f-slug" value="${escapeHtml(p.slug)}" placeholder="auto-generated-from-title">
+          <p class="field-hint">Leave blank to auto-generate from the title.</p>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="f-seo-title">SEO title</label>
+          <input class="field-input" id="f-seo-title" value="${escapeHtml(p.seoTitle)}" placeholder="Defaults to the writing's title">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="f-meta-desc">Meta description</label>
+          <textarea class="field-textarea" id="f-meta-desc" placeholder="A one or two sentence summary for search engines">${escapeHtml(p.metaDescription)}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="admin-panel">
+        <h3>Publishing</h3>
+        <div class="field-group">
+          <label class="field-label">Cover image <span style="font-weight:400;color:var(--text-faint);">(optional)</span></label>
+          <div class="cover-picker">
+            ${p.coverImage ? `<img class="cover-preview" id="cover-preview" src="${p.coverImage}">` : `<div class="cover-preview-empty" id="cover-preview-empty">No cover image</div>`}
+            <input type="hidden" id="f-cover" value="${escapeHtml(p.coverImage)}">
+            <button type="button" class="btn ghost small" id="choose-cover-btn" style="width:100%;justify-content:center;">Choose image</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="f-category">Category</label>
+          <select class="field-select" id="f-category">${cats.map(c => `<option value="${c.slug}" ${p.category===c.slug?'selected':''}>${c.name}</option>`).join('')}</select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Tags</label>
+          <div class="tag-picker" id="tag-picker">
+            ${tags.map(t => `<button type="button" class="tag-pick ${p.tags.includes(t.slug)?'selected':''}" data-tag="${t.slug}">#${t.name}</button>`).join('') || '<span class="field-hint">No tags yet — add some in Tag Management.</span>'}
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="f-pubdate">Publish date &amp; time</label>
+          <input class="field-input" type="datetime-local" id="f-pubdate" value="${fmtDateTimeInput(p.publishDate) || fmtDateTimeInput(new Date().toISOString())}">
+          <p class="field-hint">Set this in the future and publish to schedule the post.</p>
+        </div>
+        <div class="field-group checkbox-row">
+          <input type="checkbox" id="f-featured" ${p.featured ? 'checked' : ''}>
+          <label for="f-featured">Feature this writing on the homepage</label>
+        </div>
+        ${isEdit ? `<p class="field-hint">Created ${fmtDate(p.createdAt)} · Last updated ${fmtDate(p.updatedAt)}</p>` : ''}
+      </div>
+    </div>
+  </div>
+  `;
+}
+function wireWritingEditor(params){
+  const contentSurface = document.getElementById('f-content');
+  if (!contentSurface) return;
+  wireEditor('f-content', document.querySelector('.editor-toolbar'));
+
+  document.querySelectorAll('#tag-picker .tag-pick').forEach(btn => {
+    btn.addEventListener('click', () => btn.classList.toggle('selected'));
+  });
+
+  document.getElementById('choose-cover-btn').addEventListener('click', () => {
+    openImagePicker(dataUrl => {
+      document.getElementById('f-cover').value = dataUrl;
+      const wrap = document.querySelector('.cover-picker');
+      const existing = document.getElementById('cover-preview') || document.getElementById('cover-preview-empty');
+      const img = document.createElement('img');
+      img.className = 'cover-preview'; img.id = 'cover-preview'; img.src = dataUrl;
+      existing.replaceWith(img);
+    });
+  });
+
+  function collect(status){
+    const selectedTags = Array.from(document.querySelectorAll('#tag-picker .tag-pick.selected')).map(b => b.dataset.tag);
+    const isEdit = !!params.id;
+    const existing = isEdit ? CMS.getPostById(params.id) : null;
+    return {
+      id: params.id || undefined,
+      title: document.getElementById('f-title').value.trim() || 'Untitled',
+      subtitle: document.getElementById('f-subtitle').value.trim(),
+      content: document.getElementById('f-content').innerHTML,
+      slug: document.getElementById('f-slug').value.trim(),
+      seoTitle: document.getElementById('f-seo-title').value.trim(),
+      metaDescription: document.getElementById('f-meta-desc').value.trim(),
+      coverImage: document.getElementById('f-cover').value,
+      category: document.getElementById('f-category').value,
+      tags: selectedTags,
+      publishDate: document.getElementById('f-pubdate').value ? new Date(document.getElementById('f-pubdate').value).toISOString() : new Date().toISOString(),
+      featured: document.getElementById('f-featured').checked,
+      status: status,
+      createdAt: existing ? existing.createdAt : undefined,
+    };
+  }
+
+  document.getElementById('save-draft-btn').addEventListener('click', () => {
+    const record = CMS.savePost(collect('draft'));
+    toast('Draft saved.');
+    location.hash = '/writings/edit/' + record.id;
+    render();
+  });
+  document.getElementById('publish-btn').addEventListener('click', () => {
+    const data = collect('published');
+    const future = new Date(data.publishDate) > new Date();
+    const record = CMS.savePost(data);
+    toast(future ? 'Writing scheduled.' : 'Writing published.');
+    location.hash = '/writings/edit/' + record.id;
+    render();
+  });
+}
+
+/* ===================================================================
+   CATEGORIES VIEW
+=================================================================== */
+function viewCategoriesAdmin(){
+  const cats = CMS.getCategories();
+  const posts = CMS.getAllPosts();
+  return `
+  <div class="admin-topbar"><h1>Categories</h1><button class="btn" id="new-cat-btn">+ New category</button></div>
+  <div class="admin-panel" style="padding:0;">
+    <div class="table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Category</th><th>Description</th><th>Writings</th><th></th></tr></thead>
+      <tbody id="cats-tbody">
+        ${cats.map(c => `
+        <tr data-slug="${c.slug}">
+          <td class="title-cell"><span class="color-dot" style="background:${c.color}"></span>${c.name}</td>
+          <td style="color:var(--text-muted);font-size:13.5px;">${escapeHtml(c.description)}</td>
+          <td>${posts.filter(p=>p.category===c.slug).length}</td>
+          <td><div class="row-actions">
+            <button class="btn-icon" data-edit-cat="${c.slug}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            <button class="btn-icon" data-del-cat="${c.slug}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+}
+function categoryFormModal(existing){
+  openModal(`
+    <h3>${existing ? 'Edit category' : 'New category'}</h3>
+    <div class="field-group"><label class="field-label">Name</label><input class="field-input" id="cat-name" value="${existing ? escapeHtml(existing.name) : ''}"></div>
+    <div class="field-group"><label class="field-label">Description</label><textarea class="field-textarea" id="cat-desc">${existing ? escapeHtml(existing.description) : ''}</textarea></div>
+    <div class="field-group"><label class="field-label">Color</label><input type="color" id="cat-color" value="${existing ? existing.color : '#8B6F47'}" style="width:60px;height:38px;border:1px solid var(--line-strong);border-radius:var(--radius);padding:2px;background:var(--surface);"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cat-cancel">Cancel</button>
+      <button class="btn" id="cat-save">Save category</button>
+    </div>
+  `);
+  document.getElementById('cat-cancel').addEventListener('click', closeModal);
+  document.getElementById('cat-save').addEventListener('click', () => {
+    const name = document.getElementById('cat-name').value.trim();
+    if (!name) return toast('Category name is required.');
+    CMS.saveCategory({ name, description: document.getElementById('cat-desc').value.trim(), color: document.getElementById('cat-color').value, slug: existing ? existing.slug : undefined, _originalSlug: existing ? existing.slug : undefined });
+    closeModal();
+    toast('Category saved.');
+    render();
+  });
+}
+function wireCategoriesAdmin(){
+  const btn = document.getElementById('new-cat-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => categoryFormModal(null));
+  document.getElementById('cats-tbody').addEventListener('click', e => {
+    const editBtn = e.target.closest('[data-edit-cat]');
+    const delBtn = e.target.closest('[data-del-cat]');
+    if (editBtn) categoryFormModal(CMS.getCategory(editBtn.dataset.editCat));
+    if (delBtn){
+      confirmAction('This will permanently delete this category.', () => {
+        const res = CMS.deleteCategory(delBtn.dataset.delCat);
+        if (!res.ok) toast(res.reason); else toast('Category deleted.');
+        render();
+      });
+    }
+  });
+}
+
+/* ===================================================================
+   TAGS VIEW
+=================================================================== */
+function viewTagsAdmin(){
+  const tags = CMS.getTags();
+  const posts = CMS.getAllPosts();
+  return `
+  <div class="admin-topbar"><h1>Tags</h1><button class="btn" id="new-tag-btn">+ New tag</button></div>
+  <div class="admin-panel" style="padding:0;">
+    <div class="table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Tag</th><th>Used in</th><th></th></tr></thead>
+      <tbody id="tags-tbody">
+        ${tags.map(t => `
+        <tr data-slug="${t.slug}">
+          <td class="title-cell">#${t.name}</td>
+          <td>${posts.filter(p=>(p.tags||[]).includes(t.slug)).length} writings</td>
+          <td><div class="row-actions">
+            <button class="btn-icon" data-edit-tag="${t.slug}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            <button class="btn-icon" data-del-tag="${t.slug}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+          </div></td>
+        </tr>`).join('') || `<tr><td colspan="3"><div class="admin-empty">No tags yet.</div></td></tr>`}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+}
+function tagFormModal(existing){
+  openModal(`
+    <h3>${existing ? 'Edit tag' : 'New tag'}</h3>
+    <div class="field-group"><label class="field-label">Name</label><input class="field-input" id="tag-name" value="${existing ? escapeHtml(existing.name) : ''}"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="tag-cancel">Cancel</button>
+      <button class="btn" id="tag-save">Save tag</button>
+    </div>
+  `);
+  document.getElementById('tag-cancel').addEventListener('click', closeModal);
+  document.getElementById('tag-save').addEventListener('click', () => {
+    const name = document.getElementById('tag-name').value.trim();
+    if (!name) return toast('Tag name is required.');
+    CMS.saveTag({ name, slug: existing ? existing.slug : undefined, _originalSlug: existing ? existing.slug : undefined });
+    closeModal();
+    toast('Tag saved.');
+    render();
+  });
+}
+function wireTagsAdmin(){
+  const btn = document.getElementById('new-tag-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => tagFormModal(null));
+  document.getElementById('tags-tbody').addEventListener('click', e => {
+    const editBtn = e.target.closest('[data-edit-tag]');
+    const delBtn = e.target.closest('[data-del-tag]');
+    if (editBtn) tagFormModal(CMS.getTag(editBtn.dataset.editTag));
+    if (delBtn){
+      confirmAction('This will remove the tag from all writings and delete it.', () => {
+        CMS.deleteTag(delBtn.dataset.delTag);
+        toast('Tag deleted.');
+        render();
+      });
+    }
+  });
+}
+
+/* ===================================================================
+   MEDIA LIBRARY VIEW
+=================================================================== */
+function viewMediaAdmin(){
+  const media = CMS.getMedia();
+  return `
+  <div class="admin-topbar"><h1>Media Library</h1></div>
+  <div class="admin-panel">
+    <div class="media-dropzone" id="media-dropzone">Click to upload an image (stored locally in your browser)</div>
+    <input type="file" id="media-file" accept="image/*" style="display:none;">
+    <div class="media-grid" id="media-grid">
+      ${media.map(m => `
+        <div class="media-item" data-id="${m.id}">
+          <img src="${m.dataUrl}" alt="">
+          <div class="media-name">${escapeHtml(m.name)}</div>
+          <div class="media-actions">
+            <button data-replace="${m.id}" title="Replace"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg></button>
+            <button data-delete="${m.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+          </div>
+        </div>`).join('') || `<div class="admin-empty">No images uploaded yet.</div>`}
+    </div>
+  </div>
+  `;
+}
+function wireMediaAdmin(){
+  const dz = document.getElementById('media-dropzone');
+  if (!dz) return;
+  const fileInput = document.getElementById('media-file');
+  dz.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { CMS.saveMedia({ name: file.name, dataUrl: reader.result }); toast('Image uploaded.'); render(); };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('media-grid').addEventListener('click', e => {
+    const del = e.target.closest('[data-delete]');
+    const rep = e.target.closest('[data-replace]');
+    if (del){
+      confirmAction('Delete this image? Writings using it will keep a broken reference.', () => {
+        CMS.deleteMedia(del.dataset.delete);
+        toast('Image deleted.');
+        render();
+      });
+    }
+    if (rep){
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = 'image/*';
+      input.onchange = () => {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => { CMS.saveMedia({ id: rep.dataset.replace, name: file.name, dataUrl: reader.result }); toast('Image replaced.'); render(); };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    }
+  });
+}
+
+/* ===================================================================
+   ROUTES + WIRE MAP
+=================================================================== */
+route('/dashboard', viewDashboard);
+route('/writings', viewWritingsList);
+route('/writings/new', viewWritingEditor);
+route('/writings/edit/:id', viewWritingEditor);
+route('/categories', viewCategoriesAdmin);
+route('/tags', viewTagsAdmin);
+route('/media', viewMediaAdmin);
+
+const wireMap = {
+  '/dashboard': () => {},
+  '/writings': wireWritingsList,
+  '/categories': wireCategoriesAdmin,
+  '/tags': wireTagsAdmin,
+  '/media': wireMediaAdmin,
+};
+// writings/new and writings/edit/:id both need wireWritingEditor
+wireMap['/writings/new'] = wireWritingEditor;
+wireMap['/writings/edit'] = wireWritingEditor;
+
+window.addEventListener('hashchange', render);
+window.addEventListener('load', render);
+render();
+</script>
+</body>
+</html>
