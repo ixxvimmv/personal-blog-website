@@ -1,42 +1,773 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>If No One Reads This — A Writing Sanctuary</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="doc-title">If No One Reads This — a place to keep the unfinished thoughts</title>
+<meta id="doc-desc" name="description" content="A personal writing sanctuary of essays, letters, journal entries, poems, and stories.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="wrap header-inner">
-      <div class="logo">
-        <a href="#/">If No One Reads This</a>
+<div id="loading-screen">
+  <div class="loader-mark">If No One Reads This</div>
+  <div class="loader-bar"></div>
+</div>
+
+<a href="#main" class="skip-link">Skip to content</a>
+<div id="top-thread" aria-hidden="true"></div>
+
+<header class="site-header">
+  <nav class="nav" aria-label="Primary">
+    <a href="#/" class="brand">If No One Reads This<span class="dot">.</span></a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#/" data-route="/">Home</a></li>
+      <li><a href="#/writings" data-route="/writings">All Writings</a></li>
+      <li><a href="#/categories" data-route="/categories">Categories</a></li>
+      <li><a href="#/about" data-route="/about">About</a></li>
+      <li><a href="#/contact" data-route="/contact">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="icon-btn" id="search-open" aria-label="Search writings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a class="icon-btn" href="admin.html" aria-label="Admin dashboard" title="Admin dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v6c0 5 4 9 9 9s9-4 9-9V7z"/></svg>
+      </a>
+      <button class="icon-btn nav-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1"></main>
+
+<div class="newsletter" data-reveal>
+  <div class="wrap">
+    <h2>Letters from the desk</h2>
+    <p>Once in a while — never more than twice a month — a new piece lands in your inbox before it's shared anywhere else.</p>
+    <form class="newsletter-form" id="newsletter-form">
+      <input type="email" placeholder="you@example.com" required aria-label="Email address">
+      <button class="btn" type="submit">Subscribe</button>
+    </form>
+    <p class="newsletter-note" id="newsletter-note">No spam. Unsubscribe whenever you like. (This form is a design placeholder — no emails are collected.)</p>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">If No One Reads This</div>
+        <p class="footer-tag">A place to keep the unfinished thoughts — essays, letters, and small stories, written slowly.</p>
       </div>
-      <nav aria-label="Primary Site Navigation">
-        <ul class="nav-links">
-          <li><a href="#/" data-route="/">Home</a></li>
-          <li><a href="#/" data-route="/">All Writings</a></li>
-          <li><a href="#/admin/dashboard" id="nav-admin-link" style="border: 1px dashed var(--accent); padding: 4px 10px; border-radius: 4px;">Dashboard</a></li>
-        </ul>
-      </nav>
+      <div class="footer-links">
+        <div>
+          <h5>Explore</h5>
+          <ul>
+            <li><a href="#/writings">All writings</a></li>
+            <li><a href="#/categories">Categories</a></li>
+            <li><a href="#/about">About</a></li>
+            <li><a href="#/contact">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Elsewhere</h5>
+          <ul>
+            <li><a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a href="https://twitter.com" target="_blank" rel="noopener">X / Twitter</a></li>
+            <li><a href="mailto:hello@ifnoonereadsthis.blog">Email</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Admin</h5>
+          <ul>
+            <li><a href="admin.html">Dashboard login</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
-  </header>
-
-  <!-- Main View Destination Injector Container -->
-  <main id="main" class="main-content"></main>
-
-  <footer class="site-footer">
-    <div class="wrap footer-inner">
-      <p class="copyright">&copy; 2026 If No One Reads This. Kept slowly and quietly.</p>
-      <p class="footer-note">Built for fragments, essays, and unaddressed lines.</p>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> If No One Reads This. Written and built by hand.</span>
+      <span>A front-end portfolio project.</span>
     </div>
-  </footer>
+  </div>
+</footer>
 
-  <!-- Application Engine Execution Framework Component -->
-  <script src="app.js"></script>
+<button id="back-to-top" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+</button>
+
+<div id="search-overlay" role="dialog" aria-modal="true" aria-label="Search writings">
+  <button class="icon-btn search-close" id="search-close" aria-label="Close search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div class="search-panel">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="Search by title, tag, or word…" aria-label="Search writings">
+    </div>
+    <div id="search-results"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+CMS.init();
+
+/* ===================================================================
+   HELPERS
+=================================================================== */
+function cat(slug){ return CMS.getCategory(slug) || { slug, name: "Uncategorized", color: "#999" }; }
+function tagObj(slug){ return CMS.getTag(slug) || { slug, name: slug }; }
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+}
+function sortedByDateDesc(list){ return [...list].sort((a,b) => new Date(b.publishDate) - new Date(a.publishDate)); }
+function sortedByDateAsc(list){ return [...list].sort((a,b) => new Date(a.publishDate) - new Date(b.publishDate)); }
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function coverStyle(post){
+  const c = cat(post.category);
+  return post.coverImage
+    ? `background-image:url('${post.coverImage}'); background-size:cover; background-position:center;`
+    : `background: linear-gradient(135deg, ${c.color}, ${shade(c.color)});`;
+}
+function shade(hex){
+  // lighten a hex color a bit for the gradient
+  try{
+    const n = parseInt(hex.slice(1),16);
+    let r=(n>>16)+50, g=((n>>8)&0xff)+50, b=(n&0xff)+50;
+    r=Math.min(255,r); g=Math.min(255,g); b=Math.min(255,b);
+    return `rgb(${r},${g},${b})`;
+  }catch(e){ return hex; }
+}
+function cardHTML(post){
+  const c = cat(post.category);
+  return `<a class="card" href="#/post/${post.slug}" data-reveal-card>
+    <div class="card-cover" style="${coverStyle(post)}"><span class="cat-tag">${c.name}</span></div>
+    <div class="card-body">
+      <div class="card-meta"><span>${fmtDate(post.publishDate)}</span><span>·</span><span>${CMS.readingTime(post.content)} min read</span></div>
+      <h3>${post.title}</h3>
+      <p class="excerpt">${post.excerpt}</p>
+      <span class="read-more">Read the piece →</span>
+    </div>
+  </a>`;
+}
+function rowHTML(post){
+  const c = cat(post.category);
+  return `<a class="row-item" href="#/post/${post.slug}" data-reveal-row>
+    <span class="row-date">${fmtDate(post.publishDate)}</span>
+    <span>
+      <h3>${post.title}</h3>
+      <p class="excerpt">${post.excerpt}</p>
+    </span>
+    <span class="row-cat">${c.name}</span>
+  </a>`;
+}
+
+/* ===================================================================
+   ROUTER
+=================================================================== */
+const routes = {};
+function route(pattern, handler){ routes[pattern] = handler; }
+function matchRoute(path){
+  for (const pattern in routes){
+    const parts = pattern.split('/').filter(Boolean);
+    const pathParts = path.split('/').filter(Boolean);
+    if (parts.length !== pathParts.length) continue;
+    const params = {};
+    let ok = true;
+    for (let i=0;i<parts.length;i++){
+      if (parts[i].startsWith(':')) params[parts[i].slice(1)] = decodeURIComponent(pathParts[i]);
+      else if (parts[i] !== pathParts[i]) { ok = false; break; }
+    }
+    if (ok) return { handler: routes[pattern], params };
+  }
+  return null;
+}
+let currentQuery = {};
+function getQuery(){
+  const q = location.hash.split('?')[1];
+  const params = {};
+  if (q) new URLSearchParams(q).forEach((v,k) => params[k] = v);
+  return params;
+}
+function render(){
+  const full = location.hash.replace(/^#/, '') || '/';
+  const hash = full.split('?')[0] || '/';
+  currentQuery = getQuery();
+  const main = document.getElementById('main');
+  const match = matchRoute(hash);
+  main.classList.remove('page-enter');
+  document.getElementById('doc-title').textContent = "If No One Reads This — a place to keep the unfinished thoughts";
+  document.getElementById('doc-desc').setAttribute('content','A personal writing sanctuary of essays, letters, journal entries, poems, and stories.');
+  main.innerHTML = match ? match.handler(match.params) : view404();
+  void main.offsetWidth;
+  main.classList.add('page-enter');
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  updateActiveNav(hash);
+  wireDynamic();
+  setupReveal();
+  updateTopThread();
+  document.getElementById('nav-links').classList.remove('open');
+  document.getElementById('menu-toggle').setAttribute('aria-expanded','false');
+}
+function updateActiveNav(hash){
+  const base = '/' + (hash.split('/')[1] || '');
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.dataset.route === base || (base === '/' && a.dataset.route === '/'));
+  });
+}
+
+/* ===================================================================
+   VIEWS
+=================================================================== */
+function viewHome(){
+  const posts = CMS.getPublishedPosts();
+  const featured = posts.filter(p => p.featured);
+  const recent = sortedByDateDesc(posts).slice(0,3);
+  const spot = featured[Math.floor(Math.random()*featured.length)] || posts[0];
+  const cats = CMS.getCategories();
+  if (!posts.length) return `<section class="section"><div class="wrap"><div class="empty-state">No writings have been published yet. Visit the <a href="admin.html">admin dashboard</a> to publish your first piece.</div></div></section>`;
+  return `
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow" data-reveal>A Personal Writing Journal</p>
+        <h1 data-reveal>Words, kept slowly, for whoever needs to read them.</h1>
+        <p class="lede" data-reveal>If No One Reads This is a small, quiet corner of the internet for personal essays, letters, journal entries, poems, and stories — written without a deadline, and read, hopefully, without one either.</p>
+        <div class="hero-cta" data-reveal>
+          <a class="btn" href="#/writings">Start reading</a>
+          <a class="btn ghost" href="#/about">About the writer</a>
+        </div>
+        <div class="search-box" style="margin-top:30px; max-width:420px;" data-reveal>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="home-search" placeholder="Search writings…" aria-label="Search writings">
+        </div>
+      </div>
+      <div class="hero-excerpt" data-reveal>
+        <p class="quote-text">"${spot.excerpt}"</p>
+        <p class="quote-source">from <a href="#/post/${spot.slug}">${spot.title}</a> · ${cat(spot.category).name}</p>
+      </div>
+    </div>
+  </section>
+
+  ${featured.length ? `
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Featured writings</h2>
+        <a class="view-all" href="#/writings">View all writings →</a>
+      </div>
+      <div class="grid-cards">${featured.map(cardHTML).join('')}</div>
+    </div>
+  </section>` : ''}
+
+  <section class="section alt">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Recently published</h2>
+        <a class="view-all" href="#/writings">See everything →</a>
+      </div>
+      <div class="row-list">${recent.map(rowHTML).join('')}</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>Browse by category</h2></div>
+      <div class="cat-grid">
+        ${cats.map(c => `
+          <a class="cat-card" href="#/category/${c.slug}" data-reveal>
+            <span class="swatch" style="background:${c.color}"></span>
+            <span class="cat-count">${posts.filter(p=>p.category===c.slug).length} pieces</span>
+            <h3>${c.name}</h3>
+            <p>${c.description}</p>
+          </a>`).join('')}
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+function viewAbout(){
+  return `
+  <section class="section">
+    <div class="wrap">
+      <div class="about-hero">
+        <div class="avatar-mark" data-reveal aria-hidden="true">IN</div>
+        <div data-reveal>
+          <p class="eyebrow">About the writer</p>
+          <h1>I write things down so I don't have to carry them alone.</h1>
+          <p class="lede" style="margin-bottom:0;">If No One Reads This started as a private folder of unfinished drafts and slowly, almost against my will, became a public one.</p>
+        </div>
+      </div>
+      <div class="prose" data-reveal style="margin-top:40px;">
+        <p>I've kept some form of journal since I was thirteen, mostly out of necessity rather than discipline — I've always needed to write things down before I fully understood how I felt about them.</p>
+        <p>The name comes from the only way I've ever been able to write anything honest: by half-convincing myself no one would actually read it. If No One Reads This is what happened when I got tired of being the only reader of things I suspected other people might need too.</p>
+        <p class="pull-line">"I'm not trying to have the last word on anything. I'm just trying to say the true thing before I forget what it felt like."</p>
+        <p>What you'll find here is a mix: letters, personal reflections, journal entries kept mostly intact, a handful of poems, and short stories that are fiction in name only.</p>
+        <p>I don't publish on a schedule. I publish when something has finished the slow work of becoming a sentence instead of just a feeling. If you're here, I'm glad. There's no rush to any of this.</p>
+      </div>
+      <div class="values-grid" data-reveal>
+        <div class="value-card"><span class="num">01</span><h4>Slowness on purpose</h4><p>Nothing here is written to a content calendar. A piece is published when it's ready, not before.</p></div>
+        <div class="value-card"><span class="num">02</span><h4>Honesty over polish</h4><p>I'd rather a sentence be true and a little rough than smooth and slightly false.</p></div>
+        <div class="value-card"><span class="num">03</span><h4>Room for you in it</h4><p>The most personal writing is often the most shareable. I try to leave space for your own story inside mine.</p></div>
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+const PAGE_SIZE = 6;
+function viewWritings(){
+  const page = parseInt(currentQuery.page || '1', 10);
+  const sort = currentQuery.sort || 'newest';
+  const catFilter = currentQuery.cat || 'all';
+  const tagFilter = currentQuery.tag || '';
+  const q = currentQuery.q || '';
+  const cats = CMS.getCategories();
+  const tags = CMS.getTags();
+
+  return `
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>All writings</h2></div>
+      <div class="toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="writings-search" placeholder="Search by title or keyword…" value="${escapeHtml(q)}" aria-label="Search writings">
+        </div>
+        <select class="select-field" id="writings-sort" aria-label="Sort writings">
+          <option value="newest" ${sort==='newest'?'selected':''}>Newest first</option>
+          <option value="oldest" ${sort==='oldest'?'selected':''}>Oldest first</option>
+        </select>
+      </div>
+      <div class="chip-row" id="writings-filters">
+        <button class="chip ${catFilter==='all'?'active':''}" data-filter="all">All</button>
+        ${cats.map(c => `<button class="chip ${catFilter===c.slug?'active':''}" data-filter="${c.slug}">${c.name}</button>`).join('')}
+      </div>
+      <div class="tag-filter-row" id="writings-tag-row">
+        <button class="chip ${!tagFilter?'active':''}" data-tag="">All tags</button>
+        ${tags.map(t => `<button class="chip ${tagFilter===t.slug?'active':''}" data-tag="${t.slug}">#${t.name}</button>`).join('')}
+      </div>
+      <div id="writings-list-wrap" style="margin-top:30px;">
+        ${renderWritingsList(catFilter, tagFilter, q, sort, page)}
+      </div>
+    </div>
+  </section>
+  `;
+}
+function renderWritingsList(catFilter, tagFilter, q, sort, page){
+  let posts = CMS.getPublishedPosts();
+  if (catFilter && catFilter !== 'all') posts = posts.filter(p => p.category === catFilter);
+  if (tagFilter) posts = posts.filter(p => (p.tags||[]).includes(tagFilter));
+  if (q){
+    const ql = q.toLowerCase();
+    posts = posts.filter(p => (p.title + ' ' + p.excerpt + ' ' + (p.tags||[]).join(' ')).toLowerCase().includes(ql));
+  }
+  posts = sort === 'oldest' ? sortedByDateAsc(posts) : sortedByDateDesc(posts);
+  const total = posts.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const pageItems = posts.slice((safePage-1)*PAGE_SIZE, safePage*PAGE_SIZE);
+  if (!total){
+    return `<div class="empty-state">No writings match your search. Try a different word, category, or tag.</div>`;
+  }
+  return `
+    <div class="row-list">${pageItems.map(rowHTML).join('')}</div>
+    ${renderPagination(safePage, totalPages)}
+  `;
+}
+function renderPagination(page, totalPages){
+  if (totalPages <= 1) return '';
+  let buttons = '';
+  for (let i=1;i<=totalPages;i++){
+    buttons += `<button data-page="${i}" class="${i===page?'active':''}">${i}</button>`;
+  }
+  return `<div class="pagination">
+    <button data-page="${page-1}" ${page<=1?'disabled':''} aria-label="Previous page">←</button>
+    ${buttons}
+    <button data-page="${page+1}" ${page>=totalPages?'disabled':''} aria-label="Next page">→</button>
+  </div>`;
+}
+
+function viewCategories(){
+  const posts = CMS.getPublishedPosts();
+  const cats = CMS.getCategories();
+  return `
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>Categories</h2></div>
+      <p class="lede" style="margin-bottom:40px;" data-reveal>Every piece on If No One Reads This lives in one of a few rooms. Wander into whichever one matches your mood.</p>
+      <div class="cat-grid">
+        ${cats.map(c => `
+          <a class="cat-card" href="#/category/${c.slug}" data-reveal>
+            <span class="swatch" style="background:${c.color}"></span>
+            <span class="cat-count">${posts.filter(p=>p.category===c.slug).length} pieces</span>
+            <h3>${c.name}</h3>
+            <p>${c.description}</p>
+          </a>`).join('')}
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+function viewCategory(params){
+  const c = CMS.getCategory(params.slug);
+  if (!c) return view404();
+  const list = sortedByDateDesc(CMS.getPublishedPosts().filter(p => p.category === params.slug));
+  return `
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>Category</p>
+      <div class="section-head">
+        <h2>${c.name}</h2>
+        <a class="view-all" href="#/categories">All categories →</a>
+      </div>
+      <p class="lede" data-reveal style="margin-bottom:36px;">${c.description}</p>
+      ${list.length ? `<div class="row-list">${list.map(rowHTML).join('')}</div>` : `<div class="empty-state">Nothing published in this category yet.</div>`}
+    </div>
+  </section>
+  `;
+}
+
+function relatedPosts(post, all){
+  const others = all.filter(p => p.id !== post.id);
+  const scored = others.map(p => {
+    let score = 0;
+    if (p.category === post.category) score += 2;
+    score += (p.tags||[]).filter(t => (post.tags||[]).includes(t)).length;
+    return { p, score };
+  }).filter(x => x.score > 0);
+  scored.sort((a,b) => b.score - a.score || new Date(b.p.publishDate) - new Date(a.p.publishDate));
+  return scored.slice(0,3).map(x => x.p);
+}
+
+function viewPost(params){
+  const post = CMS.getPostBySlug(params.slug);
+  const isPublished = post && post.status === 'published' && new Date(post.publishDate) <= new Date();
+  if (!post || !isPublished) return view404();
+  const c = cat(post.category);
+  const all = sortedByDateDesc(CMS.getPublishedPosts());
+  const idx = all.findIndex(p => p.slug === post.slug);
+  const prev = all[idx+1];
+  const next = all[idx-1];
+  const related = relatedPosts(post, all);
+  const showUpdated = post.updatedAt && new Date(post.updatedAt) - new Date(post.publishDate) > 1000*60*60*24;
+
+  document.getElementById('doc-title').textContent = (post.seoTitle || post.title) + " — If No One Reads This";
+  document.getElementById('doc-desc').setAttribute('content', post.metaDescription || post.excerpt || '');
+
+  return `
+  <article>
+    <div class="post-hero">
+      <div class="wrap">
+        <p class="eyebrow" data-reveal>${c.name}</p>
+        <div class="post-meta-row" data-reveal>
+          <span>${fmtDate(post.publishDate)}</span><span class="sep">·</span><span>${CMS.readingTime(post.content)} min read</span>
+          ${showUpdated ? `<span class="sep">·</span><span class="updated-note">Updated ${fmtDate(post.updatedAt)}</span>` : ''}
+        </div>
+        <h1 data-reveal>${post.title}</h1>
+        ${post.subtitle ? `<p class="subtitle" data-reveal>${post.subtitle}</p>` : ''}
+        <div class="post-tags" data-reveal>${(post.tags||[]).map(t => `<a class="tag-pill" href="#/writings?tag=${t}">${tagObj(t).name}</a>`).join('')}</div>
+      </div>
+      ${post.coverImage ? `<div class="wrap"><div class="post-cover" style="background-image:url('${post.coverImage}');background-size:cover;background-position:center;" data-reveal></div></div>` : ''}
+    </div>
+
+    <div class="post-layout">
+      <div class="ribbon-col">
+        <div class="ribbon-track"><div class="ribbon-fill" id="ribbon-fill"></div></div>
+      </div>
+      <div>
+        <div class="article-body" id="article-body">${post.content}</div>
+
+        <div class="share-row">
+          <span>Share this piece</span>
+          <button class="share-btn" data-share="twitter" aria-label="Share on X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23.3 22h-7l-5.5-7.2L4.5 22H1.3l8.1-9.3L1 2h7.2l5 6.6L18.9 2zm-1.2 18h1.7L7.4 4H5.6l12.1 16z"/></svg></button>
+          <button class="share-btn" data-share="facebook" aria-label="Share on Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8.4h2.8l.4-3.3h-3.2V7.1c0-.9.3-1.6 1.6-1.6h1.7V2.5C16.5 2.4 15.4 2.3 14.2 2.3c-2.6 0-4.4 1.6-4.4 4.5v2.5H7v3.3h2.8V21h3.7z"/></svg></button>
+          <button class="share-btn" data-share="linkedin" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3V9zm7 0h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.85c0-1.4-.03-3.2-1.95-3.2-1.95 0-2.25 1.5-2.25 3.1V21h-4V9z"/></svg></button>
+          <button class="share-btn" data-share="copy" aria-label="Copy link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg></button>
+          <span id="copy-note" style="display:none;color:var(--accent-2);font-family:var(--sans);font-size:13px;">Link copied.</span>
+        </div>
+
+        <div class="post-nav">
+          ${prev ? `<a href="#/post/${prev.slug}"><div class="dir">← Previous</div><div>${prev.title}</div></a>` : `<div></div>`}
+          ${next ? `<a href="#/post/${next.slug}" class="next"><div class="dir">Next →</div><div>${next.title}</div></a>` : `<div></div>`}
+        </div>
+      </div>
+    </div>
+
+    ${related.length ? `
+    <div class="related-section">
+      <h2>Related writings</h2>
+      <div class="grid-cards">${related.map(cardHTML).join('')}</div>
+    </div>` : ''}
+  </article>
+  `;
+}
+
+function viewContact(){
+  return `
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>Get in touch</p>
+      <h1 data-reveal style="margin-bottom:14px;">Say hello.</h1>
+      <p class="lede" data-reveal style="margin-bottom:50px;">Whether it's a piece that stayed with you, a correction, or just a thought you want to share — I read every message myself.</p>
+      <div class="contact-grid">
+        <div data-reveal>
+          <form id="contact-form">
+            <div class="form-field"><label for="cf-name">Name</label><input id="cf-name" type="text" required placeholder="Your name"></div>
+            <div class="form-field"><label for="cf-email">Email</label><input id="cf-email" type="email" required placeholder="you@example.com"></div>
+            <div class="form-field"><label for="cf-message">Message</label><textarea id="cf-message" required placeholder="What's on your mind?"></textarea></div>
+            <button class="btn" type="submit">Send message</button>
+            <div class="form-success" id="contact-success">Thank you — your message has been noted. (This form is a design placeholder; no messages are actually sent.)</div>
+          </form>
+        </div>
+        <div data-reveal>
+          <h3 style="font-size:20px;">Find me elsewhere</h3>
+          <div class="social-list">
+            <a href="mailto:hello@ifnoonereadsthis.blog">✉️ hello@ifnoonereadsthis.blog</a>
+            <a href="https://instagram.com" target="_blank" rel="noopener">📷 Instagram</a>
+            <a href="https://twitter.com" target="_blank" rel="noopener">✒️ X / Twitter</a>
+            <a href="https://goodreads.com" target="_blank" rel="noopener">📚 Goodreads</a>
+          </div>
+          <p class="lede" style="margin-top:32px; font-size:15px;">I try to reply within a week.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+function view404(){
+  return `
+  <section class="page-404">
+    <div class="wrap">
+      <div class="big">404</div>
+      <h1>This page hasn't been written yet.</h1>
+      <p class="lede" style="margin:0 auto 30px;">The piece you're looking for doesn't exist, was unpublished, or was never more than a draft.</p>
+      <a class="btn" href="#/">Back to the desk</a>
+    </div>
+  </section>
+  `;
+}
+
+route('/', viewHome);
+route('/about', viewAbout);
+route('/writings', viewWritings);
+route('/categories', viewCategories);
+route('/category/:slug', viewCategory);
+route('/post/:slug', viewPost);
+route('/contact', viewContact);
+
+/* ===================================================================
+   DYNAMIC WIRING
+=================================================================== */
+function goWritings(overrides){
+  const q = Object.assign({ page:'1', sort:'newest', cat:'all', tag:'', q:'' }, currentQuery, overrides);
+  const params = new URLSearchParams();
+  if (q.q) params.set('q', q.q);
+  if (q.sort && q.sort !== 'newest') params.set('sort', q.sort);
+  if (q.cat && q.cat !== 'all') params.set('cat', q.cat);
+  if (q.tag) params.set('tag', q.tag);
+  if (q.page && q.page !== '1') params.set('page', q.page);
+  const qs = params.toString();
+  location.hash = '/writings' + (qs ? '?' + qs : '');
+}
+
+function wireDynamic(){
+  const searchInput = document.getElementById('writings-search');
+  if (searchInput){
+    let t;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => goWritings({ q: searchInput.value, page: '1' }), 250);
+    });
+    document.getElementById('writings-sort').addEventListener('change', e => goWritings({ sort: e.target.value, page:'1' }));
+    document.querySelectorAll('#writings-filters .chip').forEach(chip => {
+      chip.addEventListener('click', () => goWritings({ cat: chip.dataset.filter, page:'1' }));
+    });
+    document.querySelectorAll('#writings-tag-row .chip').forEach(chip => {
+      chip.addEventListener('click', () => goWritings({ tag: chip.dataset.tag, page:'1' }));
+    });
+    document.getElementById('writings-list-wrap').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-page]');
+      if (btn && !btn.disabled) goWritings({ page: btn.dataset.page });
+    });
+  }
+  const homeSearch = document.getElementById('home-search');
+  if (homeSearch){
+    homeSearch.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ location.hash = '/writings?q=' + encodeURIComponent(homeSearch.value); }
+    });
+  }
+
+  const contactForm = document.getElementById('contact-form');
+  if (contactForm){
+    contactForm.addEventListener('submit', e => {
+      e.preventDefault();
+      document.getElementById('contact-success').classList.add('show');
+      contactForm.reset();
+    });
+  }
+
+  const ribbon = document.getElementById('ribbon-fill');
+  const articleBody = document.getElementById('article-body');
+  if (ribbon && articleBody){
+    function updateRibbon(){
+      const rect = articleBody.getBoundingClientRect();
+      const total = rect.height - window.innerHeight * 0.4;
+      const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total,1));
+      const pct = total > 0 ? (scrolled / total) * 100 : 100;
+      ribbon.style.height = Math.min(100, Math.max(0, pct)) + '%';
+    }
+    document.addEventListener('scroll', updateRibbon, { passive:true });
+    updateRibbon();
+  }
+  document.querySelectorAll('[data-share]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = encodeURIComponent(location.href);
+      const title = encodeURIComponent(document.querySelector('.post-hero h1')?.textContent || 'If No One Reads This');
+      const kind = btn.dataset.share;
+      if (kind === 'copy'){
+        navigator.clipboard?.writeText(location.href).then(() => {
+          const note = document.getElementById('copy-note');
+          note.style.display = 'inline';
+          setTimeout(() => note.style.display = 'none', 2200);
+        });
+        return;
+      }
+      const shareUrls = {
+        twitter: `https://twitter.com/intent/tweet?text=${title}&url=${url}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+      };
+      window.open(shareUrls[kind], '_blank', 'noopener,width=600,height=500');
+    });
+  });
+}
+
+/* ===================================================================
+   SCROLL REVEAL
+=================================================================== */
+let revealObserver;
+function setupReveal(){
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const targets = document.querySelectorAll('[data-reveal], .card:not(.in-view), .row-item:not(.in-view)');
+  if (reduced){ targets.forEach(t => t.classList.add('in-view')); return; }
+  if (revealObserver) revealObserver.disconnect();
+  revealObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){ entry.target.classList.add('in-view'); revealObserver.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12 });
+  targets.forEach(t => revealObserver.observe(t));
+}
+
+function updateTopThread(){
+  const thread = document.getElementById('top-thread');
+  function onScroll(){
+    const h = document.documentElement;
+    const scrollTop = h.scrollTop || document.body.scrollTop;
+    const height = h.scrollHeight - h.clientHeight;
+    const pct = height > 0 ? (scrollTop / height) * 100 : 0;
+    thread.style.width = pct + '%';
+  }
+  document.removeEventListener('scroll', window.__threadHandler || (()=>{}));
+  window.__threadHandler = onScroll;
+  document.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+}
+
+/* ===================================================================
+   GLOBAL UI
+=================================================================== */
+function initTheme(){
+  const saved = localStorage.getItem('inrt-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+  updateThemeIcon(theme);
+}
+function updateThemeIcon(theme){
+  const icon = document.getElementById('theme-icon');
+  icon.innerHTML = theme === 'dark'
+    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('inrt-theme', next);
+  updateThemeIcon(next);
+});
+
+const menuToggle = document.getElementById('menu-toggle');
+const navLinks = document.getElementById('nav-links');
+menuToggle.addEventListener('click', () => {
+  const open = navLinks.classList.toggle('open');
+  menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+navLinks.addEventListener('click', e => { if (e.target.tagName === 'A'){ navLinks.classList.remove('open'); menuToggle.setAttribute('aria-expanded','false'); } });
+
+const searchOverlay = document.getElementById('search-overlay');
+document.getElementById('search-open').addEventListener('click', openSearch);
+document.getElementById('search-close').addEventListener('click', closeSearch);
+const searchInputGlobal = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+function openSearch(){ searchOverlay.classList.add('open'); setTimeout(() => searchInputGlobal.focus(), 50); }
+function closeSearch(){ searchOverlay.classList.remove('open'); searchInputGlobal.value=''; searchResults.innerHTML=''; }
+searchOverlay.addEventListener('click', e => { if (e.target === searchOverlay) closeSearch(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSearch();
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k'){ e.preventDefault(); openSearch(); }
+});
+searchInputGlobal.addEventListener('input', () => {
+  const q = searchInputGlobal.value.trim().toLowerCase();
+  if (!q){ searchResults.innerHTML = ''; return; }
+  const results = CMS.getPublishedPosts().filter(p => (p.title + ' ' + p.excerpt + ' ' + (p.tags||[]).join(' ')).toLowerCase().includes(q)).slice(0,8);
+  searchResults.innerHTML = results.length
+    ? results.map(p => `<a href="#/post/${p.slug}"><span class="sr-cat">${cat(p.category).name}</span><br>${p.title}</a>`).join('')
+    : `<a href="#" style="pointer-events:none;color:var(--text-muted);">No writings found for "${escapeHtml(searchInputGlobal.value)}"</a>`;
+});
+searchResults.addEventListener('click', () => closeSearch());
+
+const backToTop = document.getElementById('back-to-top');
+document.addEventListener('scroll', () => backToTop.classList.toggle('show', window.scrollY > 500), { passive:true });
+backToTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+document.getElementById('newsletter-form').addEventListener('submit', e => {
+  e.preventDefault();
+  document.getElementById('newsletter-note').textContent = "You're on the list. Thank you for reading. (Design placeholder — no emails are collected.)";
+});
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ===================================================================
+   INIT
+=================================================================== */
+initTheme();
+window.addEventListener('hashchange', render);
+window.addEventListener('load', () => {
+  render();
+  setTimeout(() => document.getElementById('loading-screen').classList.add('hidden'), 350);
+});
+render();
+</script>
 </body>
 </html>
