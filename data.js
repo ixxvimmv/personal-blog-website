@@ -21,6 +21,7 @@
     seeded: "inrt_seeded_v1",
     views: "inrt_views_log",
     settings: "inrt_settings",
+    subscribers: "inrt_subscribers",
   };
   const MAX_VIEW_LOG = 5000;
   const SESSION_KEY = "inrt_admin_session";
@@ -262,10 +263,10 @@
     writeJSON(LS.tags, DEFAULT_TAGS);
     writeJSON(LS.posts, DEFAULT_POSTS);
     writeJSON(LS.media, []);
-    localStorage.setItem(LS.auth, "karyzza"); 
+    localStorage.setItem(LS.auth, "admin123");
     writeJSON(LS.seeded, true);
   }
-/*localStorage.setItem(LS.auth, "karyzza"); password*/
+
   /* ----------------------------- CMS ------------------------------ */
   const CMS = {
     /* ---- lifecycle ---- */
@@ -519,6 +520,34 @@
       const updated = Object.assign({}, current, partial);
       writeJSON(LS.settings, updated);
       return updated;
+    },
+
+    /* ---- newsletter subscribers ----
+       Honest limitation: this stores subscribers locally (same caveat
+       as everything else without a backend) and can optionally trigger
+       a real confirmation email via EmailJS if you configure it in
+       index.html (see EMAILJS_CONFIG + the README). Without that
+       configured, emails are still safely captured here for you to
+       see, export, and message manually or import into a real
+       newsletter tool. */
+    addSubscriber(email) {
+      const clean = String(email || "").trim().toLowerCase();
+      if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+        return { ok: false, reason: "Please enter a valid email address." };
+      }
+      const list = this.getSubscribers();
+      if (list.some((s) => s.email === clean)) {
+        return { ok: false, reason: "already-subscribed", existing: true };
+      }
+      list.unshift({ id: uid("sub"), email: clean, subscribedAt: nowIso() });
+      writeJSON(LS.subscribers, list);
+      return { ok: true };
+    },
+    getSubscribers() {
+      return readJSON(LS.subscribers, []);
+    },
+    deleteSubscriber(id) {
+      writeJSON(LS.subscribers, this.getSubscribers().filter((s) => s.id !== id));
     },
 
     /* ---- helpers exposed for views ---- */
