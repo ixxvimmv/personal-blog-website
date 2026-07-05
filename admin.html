@@ -136,6 +136,7 @@ function adminShell(innerHtml, hash){
         ${navItem('/categories','Categories','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>')}
         ${navItem('/tags','Tags','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>')}
         ${navItem('/media','Media Library','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>')}
+        ${navItem('/subscribers','Subscribers','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6 12 13 2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>')}
         ${navItem('/analytics','Analytics','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>')}
         ${navItem('/settings','Settings','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>')}
       </nav>
@@ -173,7 +174,7 @@ function viewLogin(){
         <input class="field-input" type="password" id="login-pass" placeholder="Enter admin password" autofocus>
       </div>
       <button class="btn" style="width:100%;justify-content:center;" id="login-btn">Sign in</button>
-      <p class="login-hint"><br>Stored only in this browser's localStorage — there is no real server-side auth here.</p>
+      <p class="login-hint">Demo password: <strong>admin123</strong><br>Stored only in this browser's localStorage — there is no real server-side auth here.</p>
     </div>
   </div>`;
 }
@@ -225,6 +226,7 @@ function viewDashboard(){
     <div class="activity-row"><span>Tags in use</span><span>${tags.length}</span></div>
     <div class="activity-row"><span>Featured writings</span><span>${posts.filter(p=>p.featured).length}</span></div>
     <div class="activity-row"><span>Media items uploaded</span><span>${CMS.getMedia().length}</span></div>
+    <div class="activity-row"><span>Newsletter subscribers</span><span>${CMS.getSubscribers().length}</span></div>
   </div>
   `;
 }
@@ -847,6 +849,80 @@ function wireSettingsAdmin(){
 }
 
 /* ===================================================================
+   SUBSCRIBERS VIEW
+=================================================================== */
+function viewSubscribersAdmin(){
+  const subs = CMS.getSubscribers();
+  return `
+  <div class="admin-topbar">
+    <h1>Subscribers</h1>
+    <div style="display:flex;gap:10px;">
+      <button class="btn ghost" id="export-subs-btn" ${subs.length?'':'disabled'}>Export CSV</button>
+    </div>
+  </div>
+  <p class="field-hint" style="margin-bottom:24px;max-width:66ch;">
+    Everyone who submits the newsletter form on the public site shows up here. Sending
+    them a real confirmation email requires a free
+    <a href="https://www.emailjs.com" target="_blank" rel="noopener" style="color:var(--accent);">EmailJS</a>
+    account — fill in <code>EMAILJS_CONFIG</code> near the top of <code>index.html</code>'s
+    script once you have one. Until then, subscribers are still captured safely here —
+    export the list any time and paste it into a real newsletter tool (Mailchimp, Buttondown,
+    etc.) or email them directly.
+  </p>
+  <div class="stat-grid" style="grid-template-columns:repeat(2,1fr);max-width:420px;">
+    <div class="stat-card"><div class="stat-num">${subs.length}</div><div class="stat-label">Total subscribers</div></div>
+    <div class="stat-card"><div class="stat-num">${subs.filter(s => (Date.now() - new Date(s.subscribedAt))/86400000 <= 7).length}</div><div class="stat-label">New this week</div></div>
+  </div>
+  <div class="admin-panel" style="padding:0;">
+    <div class="table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Email</th><th>Subscribed</th><th></th></tr></thead>
+      <tbody id="subs-tbody">
+        ${subs.length ? subs.map(s => `
+        <tr data-id="${s.id}">
+          <td class="title-cell">${escapeHtml(s.email)}</td>
+          <td>${fmtDate(s.subscribedAt)}</td>
+          <td><div class="row-actions">
+            <button class="btn-icon" data-del-sub="${s.id}" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+          </div></td>
+        </tr>`).join('') : `<tr><td colspan="3"><div class="admin-empty">No subscribers yet.</div></td></tr>`}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+}
+function wireSubscribersAdmin(){
+  const tbody = document.getElementById('subs-tbody');
+  if (!tbody) return;
+  tbody.addEventListener('click', e => {
+    const del = e.target.closest('[data-del-sub]');
+    if (del){
+      confirmAction('Remove this subscriber from your list?', () => {
+        CMS.deleteSubscriber(del.dataset.delSub);
+        toast('Subscriber removed.');
+        render();
+      });
+    }
+  });
+  const exportBtn = document.getElementById('export-subs-btn');
+  if (exportBtn){
+    exportBtn.addEventListener('click', () => {
+      const subs = CMS.getSubscribers();
+      const rows = [['email','subscribed_at'], ...subs.map(s => [s.email, s.subscribedAt])];
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'subscribers.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast('Subscribers exported.');
+    });
+  }
+}
+
+/* ===================================================================
    ROUTES + WIRE MAP
 =================================================================== */
 route('/dashboard', viewDashboard);
@@ -858,6 +934,7 @@ route('/tags', viewTagsAdmin);
 route('/media', viewMediaAdmin);
 route('/analytics', viewAnalyticsAdmin);
 route('/settings', viewSettingsAdmin);
+route('/subscribers', viewSubscribersAdmin);
 
 const wireMap = {
   '/dashboard': () => {},
@@ -867,6 +944,7 @@ const wireMap = {
   '/media': wireMediaAdmin,
   '/analytics': wireAnalyticsAdmin,
   '/settings': wireSettingsAdmin,
+  '/subscribers': wireSubscribersAdmin,
 };
 // writings/new and writings/edit/:id both need wireWritingEditor
 wireMap['/writings/new'] = wireWritingEditor;
