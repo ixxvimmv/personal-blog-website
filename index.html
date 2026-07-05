@@ -9,6 +9,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<!-- Optional: enables real confirmation emails when subscribing. Free to set up at
+     https://www.emailjs.com — safe to leave as-is if you don't want this; the
+     newsletter form still works and stores subscribers either way. See README. -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -37,9 +41,6 @@
       <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
         <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
-      <a class="icon-btn" href="admin.html" aria-label="Admin dashboard" title="Admin dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v6c0 5 4 9 9 9s9-4 9-9V7z"/></svg>
-      </a>
       <button class="icon-btn nav-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
@@ -57,7 +58,7 @@
       <input type="email" placeholder="you@example.com" required aria-label="Email address">
       <button class="btn" type="submit">Subscribe</button>
     </form>
-    <p class="newsletter-note" id="newsletter-note">No spam. Unsubscribe whenever you like. (This form is a design placeholder — no emails are collected.)</p>
+    <p class="newsletter-note" id="newsletter-note">No spam. Unsubscribe whenever you like.</p>
   </div>
 </div>
 
@@ -84,12 +85,6 @@
             <li><a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a></li>
             <li><a href="https://twitter.com" target="_blank" rel="noopener">X / Twitter</a></li>
             <li><a href="mailto:hello@ifnoonereadsthis.blog">Email</a></li>
-          </ul>
-        </div>
-        <div>
-          <h5>Admin</h5>
-          <ul>
-            <li><a href="admin.html">Dashboard login</a></li>
           </ul>
         </div>
       </div>
@@ -123,6 +118,22 @@
 <script src="data.js"></script>
 <script>
 CMS.init();
+
+/* ---------------------------------------------------------------
+   OPTIONAL: real confirmation emails for newsletter subscribers.
+   Fill these in with your own free EmailJS account (emailjs.com) to
+   send an actual email when someone subscribes. Leave blank and the
+   form still works — subscribers are safely stored and viewable in
+   the admin dashboard, they just won't get an automatic email yet.
+--------------------------------------------------------------- */
+const EMAILJS_CONFIG = {
+  serviceId: "",   // e.g. "service_abc123"
+  templateId: "",  // e.g. "template_xyz789"
+  publicKey: "",   // e.g. "AbCdEfGhIjKlMnOp"
+};
+if (EMAILJS_CONFIG.publicKey && window.emailjs) {
+  emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+}
 
 /* ===================================================================
    HELPERS
@@ -240,7 +251,7 @@ function viewHome(){
   const recent = sortedByDateDesc(posts).slice(0,3);
   const spot = featured[Math.floor(Math.random()*featured.length)] || posts[0];
   const cats = CMS.getCategories();
-  if (!posts.length) return `<section class="section"><div class="wrap"><div class="empty-state">No writings have been published yet. Visit the <a href="admin.html">admin dashboard</a> to publish your first piece.</div></div></section>`;
+  if (!posts.length) return `<section class="section"><div class="wrap"><div class="empty-state">No writings have been published yet. Check back soon.</div></div></section>`;
   return `
   <section class="hero">
     <div class="wrap hero-grid">
@@ -760,7 +771,29 @@ backToTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smo
 
 document.getElementById('newsletter-form').addEventListener('submit', e => {
   e.preventDefault();
-  document.getElementById('newsletter-note').textContent = "You're on the list. Thank you for reading. (Design placeholder — no emails are collected.)";
+  const form = e.target;
+  const emailInput = form.querySelector('input[type="email"]');
+  const note = document.getElementById('newsletter-note');
+  const result = CMS.addSubscriber(emailInput.value);
+
+  if (!result.ok && result.existing){
+    note.textContent = "You're already on the list — thank you!";
+    return;
+  }
+  if (!result.ok){
+    note.textContent = result.reason || "Please enter a valid email address.";
+    return;
+  }
+
+  const canSendReal = EMAILJS_CONFIG.serviceId && EMAILJS_CONFIG.templateId && EMAILJS_CONFIG.publicKey && window.emailjs;
+  if (canSendReal){
+    emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, { to_email: emailInput.value })
+      .then(() => { note.textContent = "You're on the list — check your inbox for a confirmation email."; })
+      .catch(() => { note.textContent = "You're on the list. (The confirmation email failed to send — check your EmailJS setup.)"; });
+  } else {
+    note.textContent = "You're on the list. Thank you for reading.";
+  }
+  form.reset();
 });
 
 document.getElementById('year').textContent = new Date().getFullYear();
