@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>If No One Reads This — a place to keep the unfinished thoughts</title>
+<meta name="description" content="A personal writing sanctuary of essays, letters, journal entries, poems, and stories.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+<div id="top-thread" aria-hidden="true"></div>
+
+<header class="site-header">
+  <nav class="nav" aria-label="Primary">
+    <a href="#/" class="brand">If No One Reads This<span class="dot">.</span></a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#/" data-route="/">Home</a></li>
+      <li><a href="#/writings" data-route="/writings">All Writings</a></li>
+      <li><a href="#/categories" data-route="/categories">Categories</a></li>
+      <li><a href="#/about" data-route="/about">About</a></li>
+      <li><a href="#/contact" data-route="/contact">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="icon-btn" id="search-open" aria-label="Search writings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1"></main>
+
+<div class="newsletter" data-reveal>
+  <div class="wrap">
+    <h2>Letters from the desk</h2>
+    <p>Once in a while — never more than twice a month — a new piece lands in your inbox before it's shared anywhere else.</p>
+    <form class="newsletter-form" id="newsletter-form">
+      <input type="email" placeholder="you@example.com" required aria-label="Email address">
+      <button class="btn" type="submit">Subscribe</button>
+    </form>
+    <p class="newsletter-note" id="newsletter-note">No spam. Unsubscribe whenever you like. (This form is a design placeholder — no emails are collected.)</p>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">If No One Reads This</div>
+        <p class="footer-tag">A place to keep the unfinished thoughts — essays, letters, and small stories, written slowly.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <h5>Explore</h5>
+          <ul>
+            <li><a href="#/writings">All writings</a></li>
+            <li><a href="#/categories">Categories</a></li>
+            <li><a href="#/about">About</a></li>
+            <li><a href="#/contact">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Elsewhere</h5>
+          <ul>
+            <li><a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a href="https://twitter.com" target="_blank" rel="noopener">X / Twitter</a></li>
+            <li><a href="mailto:hello@ifnoonereadsthis.blog">Email</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> If No One Reads This. Written and built by hand.</span>
+      <span>A front-end portfolio project.</span>
+    </div>
+  </div>
+</footer>
+
+<button id="back-to-top" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+</button>
+
+<div id="search-overlay" role="dialog" aria-modal="true" aria-label="Search writings">
+  <button class="icon-btn search-close" id="search-close" aria-label="Close search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div class="search-panel">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="Search by title, tag, or word…" aria-label="Search writings">
+    </div>
+    <div id="search-results"></div>
+  </div>
+</div>
+
+<script>
+/* ===================================================================
+   DATA
+=================================================================== */
+const CATEGORIES = [
+  { slug: "letters", name: "Letters", desc: "Words addressed to someone — sent or not.", class: "cov-letters", swatch: "#8B6F47" },
+  { slug: "reflections", name: "Personal Reflections", desc: "Slow thinking about ordinary things.", class: "cov-reflections", swatch: "#5C6B5D" },
+  { slug: "journal", name: "Journal Entries", desc: "Unfiltered, dated, and a little unfinished.", class: "cov-journal", swatch: "#6b7a8f" },
+  { slug: "poems", name: "Poems", desc: "Short, compressed, and meant to be reread.", class: "cov-poems", swatch: "#8f5c6b" },
+  { slug: "stories", name: "Stories", desc: "Fiction, mostly, but never entirely made up.", class: "cov-stories", swatch: "#7a5c8f" },
+  { slug: "notes", name: "Thoughts & Notes", desc: "Fragments too small to be essays.", class: "cov-notes", swatch: "#8f7a5c" },
+];
+
+function cat(slug){ return CATEGORIES.find(c => c.slug === slug); }
+
+const POSTS = [
+  {
+    slug: "letter-to-my-younger-self",
+    title: "A Letter I Never Sent to My Younger Self",
+    subtitle: "Written the week I turned the same age my mother was when she had me.",
+    category: "letters",
+    tags: ["growing up", "family", "letters"],
+    date: "2026-06-02",
+    featured: true,
+    excerpt: "You are going to spend a decade being afraid of a life that turns out to be perfectly survivable. I wish I could tell you that sooner.",
+    body: [
+      "You won't believe this, but you're going to be fine. Not in the loud, certain way people say it to make you stop crying — fine in the quieter way, the way a room is fine after you've lived in it long enough to stop noticing the crack in the ceiling.",
+      "I know you think the version of yourself you're supposed to become is already decided, waiting somewhere up ahead like a train you have to catch. It isn't. You will miss trains. You will miss the one you thought was the only one. And somehow you'll still arrive somewhere worth arriving at, just later, and by a route nobody would have recommended.",
+      "You are so afraid of being ordinary that you can't yet see how much tenderness is hiding inside an ordinary life. The dishes in the sink. The friend who calls on a Tuesday for no reason. These will matter more than the things you're currently losing sleep over — I promise you this the way you can only promise something after you've already lived past it.",
+      "There is a particular kind of loneliness you're carrying right now that feels like evidence of something being wrong with you. It isn't. It's just what it feels like to be a person who notices too much and says too little. That noticing, eventually, becomes the thing people love you for. Be patient with it.",
+      "You will hurt people without meaning to, and you will be hurt in ways you didn't see coming. Neither will be the end of the story you think it is. Both will be folded, eventually, into a life that has room for all of it — the mistakes, the almosts, the ones that got away and the one who didn't.",
+      "I'm not writing to warn you. I'm writing because I finally understand what my mother must have felt at my age, holding a version of me that hadn't happened yet, and I wanted, just once, to hold you the same way — without trying to fix you, just glad you're going to make it.",
+    ],
+  },
+  {
+    slug: "letter-to-the-friend-who-moved-away",
+    title: "For the Friend Who Moved Away",
+    subtitle: "",
+    category: "letters",
+    tags: ["friendship", "distance", "letters"],
+    date: "2026-03-14",
+    featured: false,
+    excerpt: "We said we'd talk every week. We don't. I've made my peace with what that means and what it doesn't.",
+    body: [
+      "I keep drafting messages to you that never leave the notes app. Not because I don't mean them, but because I've started to distrust the version of a friendship that only exists in scheduled phone calls and birthday texts. I want to tell you something true instead of something tidy.",
+      "The truth is I miss you in ways that don't fit into a message. I miss the specific quality of laughing with you in a kitchen that wasn't either of ours. I miss knowing, without asking, what kind of day you'd had by the way you said hello. Distance doesn't erase that knowing, but it does let it go quiet, and the quiet unsettles me more than I expected.",
+      "I used to think that if a friendship required effort, something was wrong with it. Now I think that's backwards. The ones worth keeping require effort precisely because they're worth keeping — the way you water something you actually want to survive the winter.",
+      "So this isn't an apology for the weeks we don't talk, and it isn't a promise that we'll suddenly become people who talk every day. It's just a letter to say: you are still in the room with me, even from here. When something good happens, you're still the second person I think to tell.",
+      "I hope wherever you've landed feels like it's starting to belong to you. And I hope, selfishly, that some part of you still belongs to the life we built somewhere else, because I'm not ready to let that go, and I don't think you are either.",
+    ],
+  },
+  {
+    slug: "turning-thirty-in-a-rented-apartment",
+    title: "On Turning Thirty in a Rented Apartment",
+    subtitle: "A reflection on the life I thought I'd have by now, and the one I actually have.",
+    category: "reflections",
+    tags: ["milestones", "adulthood", "home"],
+    date: "2026-05-20",
+    featured: true,
+    excerpt: "I always pictured thirty as a finished room. Instead it's a room I'm still furnishing, in a building I don't own, and I'm learning to be glad about that.",
+    body: [
+      "There was a version of thirty I planned for without ever quite deciding to. A house, probably. A partner whose toothbrush lived permanently beside mine. Some kind of internal quiet that would arrive, presumably, once enough of the right boxes had been checked.",
+      "Instead I turned thirty in a rented apartment with a landlord who takes four days to answer texts, surrounded by furniture I bought secondhand and love more than I expected to. Nothing about my life looks like the diagram I drew at twenty-two. For a long time I treated that as a kind of failure — a schedule I'd fallen behind on.",
+      "What's changed isn't my circumstances so much as my relationship to the diagram. I've started to notice how much of it was borrowed — from my parents' timeline, from what my friends were posting, from a general cultural sense of what thirty is supposed to announce about a person. None of it was actually mine. I inherited a deadline for a life I never fully chose.",
+      "The apartment itself has become, unexpectedly, a kind of teacher. Because I don't own it, I've had to get better at loving things without needing to keep them. The light that comes through the kitchen window at 5pm in October. The neighbor's cat that visits the fire escape. None of it is permanent, and all of it is, right now, mine to notice.",
+      "I don't think I'll stay here forever, and I don't think that's the point. The point, if there is one, is that a life can be entirely real and entirely good without matching the picture you drew of it years before you knew what you'd actually need.",
+      "So: thirty, in a rented apartment, still figuring it out. I used to think that sentence sounded like an apology. Now it just sounds like the truth, and the truth, it turns out, is a decent place to live.",
+    ],
+  },
+  {
+    slug: "grandmothers-hands",
+    title: "What My Grandmother's Hands Taught Me",
+    subtitle: "",
+    category: "reflections",
+    tags: ["family", "grief", "memory"],
+    date: "2026-01-11",
+    featured: false,
+    excerpt: "She never once told me she loved me in those words. She didn't have to. Her hands said it in a language I'm still learning to translate.",
+    body: [
+      "My grandmother's hands were always doing something — shelling peas, kneading dough, smoothing the same square of fabric over and over as if convincing it to lie flat. I don't remember her sitting still except at the very end, and even then her fingers moved slightly, out of habit, against the blanket.",
+      "She wasn't a woman who said much. Affection, in her house, was expressed through food that appeared before you'd admitted you were hungry, through a sweater draped over your shoulders before you'd noticed the room had cooled. I used to wish she would just say the words. It took me a long time to understand that she was saying them constantly, in a dialect I hadn't yet learned to hear.",
+      "After she died, I found a drawer full of mended things — socks, shirt collars, a stuffed rabbit that had once been mine, all stitched with the same patient, invisible thread. She had been repairing our lives quietly for decades, and none of us had thought to call it what it was.",
+      "I catch myself now doing small versions of the same thing — refilling someone's glass before they ask, noticing a loose button before it becomes a lost one. I used to think I'd inherited her hands by accident. I think now it was the one inheritance she meant fully on purpose.",
+      "I still don't say the words as often as I probably should. But I've stopped apologizing for that. Some love just isn't spoken. Some of it is stitched.",
+    ],
+  },
+  {
+    slug: "347am-still-awake",
+    title: "3:47 AM, Still Awake",
+    subtitle: "Journal — June",
+    category: "journal",
+    tags: ["insomnia", "night", "journal"],
+    date: "2026-06-18",
+    featured: false,
+    excerpt: "The apartment makes different sounds at this hour, like it's finally comfortable enough to be honest.",
+    body: [
+      "Can't sleep. Again. I've stopped fighting it around the third hour and started treating these nights as their own strange, private country — one with different rules and a different version of me who lives there.",
+      "The fridge hums louder at this hour, or maybe I just have nothing else competing for my attention. Somewhere outside a car alarm goes off and stops, apologizing for itself. I lie here doing the thing where I replay a conversation from four years ago and lose an argument I already technically won.",
+      "There's a specific kind of clarity that only shows up uninvited, past three in the morning, when the part of my brain that manages the day is finally off duty. It's not always useful clarity. Tonight it's mostly just true: I miss people I've already forgiven for leaving. I'm tired in a way that sleep alone won't fix. I still haven't called my brother back.",
+      "I used to resent these nights. Now I mostly just take notes, the way you'd keep a field journal on a creature you don't fully understand but have stopped trying to get rid of. This is the entry for tonight. Nothing resolved. Nothing urgent, either. Just awake, and honest about it, until eventually I won't be.",
+    ],
+  },
+  {
+    slug: "morning-after-the-storm",
+    title: "The Morning After the Storm",
+    subtitle: "Journal — early June",
+    category: "journal",
+    tags: ["weather", "journal", "quiet"],
+    date: "2026-06-05",
+    featured: false,
+    excerpt: "Everything outside looks rearranged, like the night moved the furniture without asking.",
+    body: [
+      "Woke up to a strange, scrubbed quiet — the kind that only exists after a storm has finished arguing with itself. Half a tree branch is lying across the driveway like it gave up mid-sentence. The air smells like wet pavement and something green.",
+      "I made coffee and stood at the window longer than the coffee justified, watching a neighbor sweep water off her porch with the particular calm of someone who has done this every summer for thirty years. There's a lesson in that calm I keep almost learning.",
+      "The power flickered twice overnight and I lay in the dark both times, oddly comforted, like the house was just checking that I was paying attention. I don't have anything profound to say about a storm. Only that it rearranged the yard, and something in me, slightly, along with it.",
+      "By nine the sun was out like nothing had happened, and the puddles were already starting to forget the rain. I'm trying to be more like the puddles today — reflecting what's here without holding on to what already passed.",
+    ],
+  },
+  {
+    slug: "small-weather",
+    title: "Small Weather",
+    subtitle: "",
+    category: "poems",
+    tags: ["love", "weather", "poems"],
+    date: "2026-04-09",
+    featured: true,
+    excerpt: "You are not a season. You are the five minutes before rain, when the whole sky changes its mind.",
+    isPoem: true,
+    body: [
+`You are not a season,
+you are the five minutes before rain,
+the pressure drop before anyone
+has said a single thing out loud.
+
+I have learned to read you
+the way farmers read a darkening field —
+not with fear,
+with attention.
+
+Some days you are only
+a change in the light,
+barely a weather at all,
+and I love you like that too:
+quietly, without an umbrella,
+without needing
+to be right about the forecast.
+
+Other days you come in
+like something the radio warned about,
+and I stay anyway,
+because I have never once
+regretted standing outside
+for something true.
+
+Not a season.
+Not even a storm.
+Just small weather,
+moving through a life
+that has learned, finally,
+to leave the windows open.`
+    ],
+  },
+  {
+    slug: "instructions-for-leaving-a-room",
+    title: "Instructions for Leaving a Room",
+    subtitle: "",
+    category: "poems",
+    tags: ["endings", "poems", "grief"],
+    date: "2026-02-27",
+    featured: false,
+    excerpt: "Turn off the light last, not first. Let your eyes adjust to what the dark actually looks like.",
+    isPoem: true,
+    body: [
+`Turn off the light last, not first.
+Let your eyes adjust
+to what the dark actually looks like
+before you decide it's unbearable.
+
+Take one thing that doesn't matter —
+a coaster, a pen that barely writes —
+so your hands have something to do
+besides remember.
+
+Do not look back from the doorway
+expecting the room to look sorry.
+Rooms don't apologize.
+They just wait for the next person
+to bring in different furniture.
+
+Say the goodbye out loud,
+even if no one's there to hear it.
+Some sentences need
+the shape of your own mouth
+to become true.
+
+Close the door slowly.
+Fast doors sound like anger.
+Slow ones sound like something
+that was, for a while,
+actually loved.
+
+Walk away without checking
+if the door is fully shut.
+Some rooms
+you're allowed to leave
+a little open.`
+    ],
+  },
+  {
+    slug: "woman-who-collected-doorbells",
+    title: "The Woman Who Collected Doorbells",
+    subtitle: "A short story.",
+    category: "stories",
+    tags: ["fiction", "short story", "eccentricity"],
+    date: "2026-05-02",
+    featured: true,
+    excerpt: "Mrs. Okafor had forty-one doorbells mounted on a board in her hallway, and every one of them still worked.",
+    body: [
+      "Mrs. Okafor had forty-one doorbells mounted on a board in her hallway, arranged not by size or color but by some private logic only she understood. Visitors always wanted to press them. She always let them, once, and only once, because — she explained, without further explanation — a doorbell that's rung too often forgets what it's for.",
+      "She'd started the collection the year her husband died, taking the bell from their own front door because she couldn't stand hearing it ring for anyone who wasn't him. After that, she began collecting them from estate sales, demolition sites, the boxes people leave on curbs labeled FREE in handwriting that's trying too hard to seem casual about letting go.",
+      "Each one, she told me once, still had a house attached to it, invisibly. The one shaped like a brass acorn had belonged to a dentist who'd installed it in 1962 and never once had a patient he didn't like. The cracked plastic one, the ugliest in the collection, had rung every single day for eleven years to announce a paperboy who later became a fairly famous poet.",
+      "I asked her, the last time I visited, what she was going to do with all of them — forty-one bells and no way to display them properly, no museum interested in a hallway full of other people's front doors. She said she wasn't collecting doorbells at all. She was collecting the exact moment before someone opens a door not knowing who's on the other side. That moment, she said, was the last pure suspense left in ordinary life, and someone had to keep it somewhere.",
+      "She died two winters later. The board of doorbells went to her nephew, who didn't understand it and sold most of them at a yard sale for a dollar each. I bought the cracked plastic one. It's screwed into my own doorframe now, wired to nothing, connected to no circuit at all. Sometimes, out of habit, I still press it on my way inside — not because I expect it to ring, but because some sounds are worth keeping even after they've stopped announcing anything.",
+    ],
+  },
+  {
+    slug: "two-trains-one-platform",
+    title: "Two Trains, One Platform",
+    subtitle: "A short story.",
+    category: "stories",
+    tags: ["fiction", "chance", "short story"],
+    date: "2026-03-30",
+    featured: false,
+    excerpt: "He'd taken the same platform for six years and never once considered that the wrong train might be the right decision.",
+    body: [
+      "The 6:42 and the 6:44 left from the same platform, three minutes and one entire life apart, and Dele had taken the 6:42 for six years without once glancing at the departure board to check what the other train was for.",
+      "On the day his phone died and his watch had stopped keeping honest time, he boarded what he assumed was the 6:42 and only realized, somewhere past the second stop, that the announcements were wrong — unfamiliar station names read out in the automated voice like a language he almost, but didn't quite, speak.",
+      "He should have been anxious. Instead he found himself oddly relieved, the way you feel when a plan you never chose finally releases you from having to defend it. He got off at a station he'd passed a thousand times without ever exiting, and found a small bakery near the entrance run by a man who insisted, cheerfully, that Dele looked like someone who needed a second breakfast.",
+      "They talked for eleven minutes about nothing important — bread, mostly, and a little about the neighborhood, which the baker described the way people describe their children, with equal parts pride and mild exasperation. Dele left with a pastry he didn't need and a business card he almost threw away.",
+      "He went back to the 6:42 the next morning, and the morning after that, because habits don't dissolve just because you've briefly seen outside them. But he kept the business card in his coat pocket for three months, until, on a day that gave him no particular reason to, he took the 6:44 instead — on purpose this time — and found the bakery again, and this time stayed for an hour.",
+      "Nobody writes songs about the three minutes between two commuter trains. But Dele would tell you, if you asked, that his whole life quietly rearranged itself in exactly that gap — not because of fate, which he didn't especially believe in, but because he'd finally let a mistake stay a mistake long enough to become something else.",
+    ],
+  },
+  {
+    slug: "usefulness-of-unfinished-things",
+    title: "On the Usefulness of Unfinished Things",
+    subtitle: "",
+    category: "notes",
+    tags: ["creativity", "perfectionism", "notes"],
+    date: "2026-06-25",
+    featured: false,
+    excerpt: "A half-finished painting still teaches you something a completed one can't: what you were thinking before you knew the ending.",
+    body: [
+      "I have a drawer of unfinished things — a half-knitted scarf, three chapters of a novel that stalled at the same sentence for two years, a watercolor of a coastline I visited once and apparently couldn't fully commit to remembering.",
+      "For a long time I treated this drawer as evidence against me. Proof of a certain flakiness, an inability to see things through. Lately I've started to think of it differently: as a record of thinking in progress, preserved at the exact moment before I knew how it would end.",
+      "A finished piece hides its own uncertainty. It presents itself as inevitable, as though it always knew where it was going. An unfinished one is more honest. It shows you the fork in the road — the sentence where I genuinely didn't know what came next, the brushstroke where I ran out of nerve or time or both.",
+      "I'm not arguing against finishing things. Finished things matter, and I intend to finish more of mine. But I've stopped being ashamed of the drawer. It's less a graveyard of failures than a sketchbook of every version of me who started something with real hope and, for reasons that were usually reasonable at the time, set it down.",
+    ],
+  },
+  {
+    slug: "a-note-on-silence",
+    title: "A Note on Silence",
+    subtitle: "",
+    category: "notes",
+    tags: ["quiet", "attention", "notes"],
+    date: "2026-01-30",
+    featured: false,
+    excerpt: "Not every silence is empty. Some of them are just full of things that don't need saying.",
+    body: [
+      "We talk about silence like it's a lack — dead air, an awkward pause, the thing you're supposed to fill before someone decides you're boring. I've started to notice how much of that is inherited discomfort rather than actual truth.",
+      "The best conversations I've had recently include long stretches where nobody says anything — two people just sitting in a kitchen, one of them peeling an orange, neither one performing the sound of being interesting. That kind of silence isn't empty. It's just full of something that doesn't need a voice.",
+      "I think we've confused talking with connecting so thoroughly that we've forgotten silence can be its own form of intimacy — the version of closeness that doesn't require anyone to be clever, just present.",
+      "This isn't a note against conversation. I love conversation, loudly and often. It's just a small reminder to myself, on days when the quiet starts to feel like failure, that some of the best things I've ever shared with another person happened without either of us saying a word.",
+    ],
+  },
+];
+
+/* ===================================================================
+   HELPERS
+=================================================================== */
+function fmtDate(iso){
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+}
+function wordCount(body){
+  return body.join(" ").split(/\s+/).filter(Boolean).length;
+}
+function readingTime(post){
+  const words = wordCount(post.body);
+  const mins = Math.max(1, Math.round(words / 190));
+  return mins + " min read";
+}
+function sortedByDateDesc(list){
+  return [...list].sort((a,b) => new Date(b.date) - new Date(a.date));
+}
+function postsInCategory(slug){
+  return sortedByDateDesc(POSTS.filter(p => p.category === slug));
+}
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function coverBlock(post, opts={}){
+  const c = cat(post.category);
+  const h = opts.height || "";
+  return `<div class="card-cover ${c.class}" style="${h ? 'height:'+h+';' : ''}">
+    <span class="cat-tag">${c.name}</span>
+  </div>`;
+}
+
+function cardHTML(post){
+  const c = cat(post.category);
+  return `<a class="card" href="#/post/${post.slug}" data-reveal-card>
+    ${coverBlock(post)}
+    <div class="card-body">
+      <div class="card-meta"><span>${fmtDate(post.date)}</span><span>·</span><span>${readingTime(post)}</span></div>
+      <h3>${post.title}</h3>
+      <p class="excerpt">${post.excerpt}</p>
+      <span class="read-more">Read the piece →</span>
+    </div>
+  </a>`;
+}
+
+function rowHTML(post){
+  const c = cat(post.category);
+  return `<a class="row-item" href="#/post/${post.slug}" data-reveal-row>
+    <span class="row-date">${fmtDate(post.date)}</span>
+    <span>
+      <h3>${post.title}</h3>
+      <p class="excerpt">${post.excerpt}</p>
+    </span>
+    <span class="row-cat">${c.name}</span>
+  </a>`;
+}
+
+/* ===================================================================
+   ROUTER
+=================================================================== */
+const routes = {};
+function route(pattern, handler){ routes[pattern] = handler; }
+function matchRoute(path){
+  for (const pattern in routes){
+    const parts = pattern.split('/').filter(Boolean);
+    const pathParts = path.split('/').filter(Boolean);
+    if (parts.length !== pathParts.length) continue;
+    const params = {};
+    let ok = true;
+    for (let i=0;i<parts.length;i++){
+      if (parts[i].startsWith(':')) params[parts[i].slice(1)] = decodeURIComponent(pathParts[i]);
+      else if (parts[i] !== pathParts[i]) { ok = false; break; }
+    }
+    if (ok) return { handler: routes[pattern], params };
+  }
+  return null;
+}
+
+function render(){
+  const hash = location.hash.replace(/^#/, '') || '/';
+  const main = document.getElementById('main');
+  const match = matchRoute(hash);
+  main.classList.remove('page-enter');
+  if (match){
+    main.innerHTML = match.handler(match.params);
+  } else {
+    main.innerHTML = view404();
+  }
+  void main.offsetWidth;
+  main.classList.add('page-enter');
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  updateActiveNav(hash);
+  wireDynamic();
+  setupReveal();
+  updateTopThread();
+  document.getElementById('nav-links').classList.remove('open');
+  document.getElementById('menu-toggle').setAttribute('aria-expanded','false');
+}
+
+function updateActiveNav(hash){
+  const base = '/' + (hash.split('/')[1] || '');
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.dataset.route === base || (base === '/' && a.dataset.route === '/'));
+  });
+}
+
+/* ===================================================================
+   VIEWS
+=================================================================== */
+function viewHome(){
+  const featured = POSTS.filter(p => p.featured);
+  const recent = sortedByDateDesc(POSTS).slice(0,3);
+  const spot = featured[Math.floor(Math.random()*featured.length)] || POSTS[0];
+  return `
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow" data-reveal>A Personal Writing Journal</p>
+        <h1 data-reveal>Words, kept slowly, for whoever needs to read them.</h1>
+        <p class="lede" data-reveal>If No One Reads This is a small, quiet corner of the internet for personal essays, letters, journal entries, poems, and stories — written without a deadline, and read, hopefully, without one either.</p>
+        <div class="hero-cta" data-reveal>
+          <a class="btn" href="#/writings">Start reading</a>
+          <a class="btn ghost" href="#/about">About the writer</a>
+        </div>
+      </div>
+      <div class="hero-excerpt" data-reveal>
+        <p class="quote-text">"${spot.excerpt}"</p>
+        <p class="quote-source">from <a href="#/post/${spot.slug}">${spot.title}</a> · ${cat(spot.category).name}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Featured writings</h2>
+        <a class="view-all" href="#/writings">View all writings →</a>
+      </div>
+      <div class="grid-cards">
+        ${featured.map(cardHTML).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Recently published</h2>
+        <a class="view-all" href="#/writings">See everything →</a>
+      </div>
+      <div class="row-list">
+        ${recent.map(rowHTML).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>Browse by category</h2></div>
+      <div class="cat-grid">
+        ${CATEGORIES.map(c => `
+          <a class="cat-card" href="#/category/${c.slug}" data-reveal>
+            <span class="swatch" style="background:${c.swatch}"></span>
+            <span class="cat-count">${postsInCategory(c.slug).length} pieces</span>
+            <h3>${c.name}</h3>
+            <p>${c.desc}</p>
+          </a>`).join('')}
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+function viewAbout(){
+  return `
+  <section class="section">
+    <div class="wrap">
+      <div class="about-hero">
+        <div class="avatar-mark" data-reveal aria-hidden="true">IN</div>
+        <div data-reveal>
+          <p class="eyebrow">About the writer</p>
+          <h1>I write things down so I don't have to carry them alone.</h1>
+          <p class="lede" style="margin-bottom:0;">If No One Reads This started as a private folder of unfinished drafts and slowly, almost against my will, became a public one.</p>
+        </div>
+      </div>
+
+      <div class="prose" data-reveal style="margin-top:40px;">
+        <p>I've kept some form of journal since I was thirteen, mostly out of necessity rather than discipline — I've always needed to write things down before I fully understood how I felt about them. For a long time that writing stayed private, tucked into notebooks and, later, a graveyard of abandoned notes apps.</p>
+        <p>The name comes from the only way I've ever been able to write anything honest: by half-convincing myself no one would actually read it. If No One Reads This is what happened when I got tired of being the only reader of things I suspected other people might need too. Not because my life is unusual — it mostly isn't — but because I think there's something quietly useful about watching someone else put ordinary difficulty into plain language.</p>
+        <p class="pull-line">"I'm not trying to have the last word on anything. I'm just trying to say the true thing before I forget what it felt like."</p>
+        <p>What you'll find here is a mix: letters I've written and, occasionally, actually sent; personal reflections on the parts of adulthood nobody fully prepares you for; journal entries kept mostly intact, typos and all; a handful of poems I write when prose feels too slow; and short stories that are fiction in name only.</p>
+        <p>I don't publish on a schedule. I publish when something has finished the slow work of becoming a sentence instead of just a feeling. If you're here, I'm glad. Pull up a chair. There's no rush to any of this.</p>
+      </div>
+
+      <div class="values-grid" data-reveal>
+        <div class="value-card">
+          <span class="num">01</span>
+          <h4>Slowness on purpose</h4>
+          <p>Nothing here is written to a content calendar. A piece is published when it's ready, not before.</p>
+        </div>
+        <div class="value-card">
+          <span class="num">02</span>
+          <h4>Honesty over polish</h4>
+          <p>I'd rather a sentence be true and a little rough than smooth and slightly false.</p>
+        </div>
+        <div class="value-card">
+          <span class="num">03</span>
+          <h4>Room for you in it</h4>
+          <p>The most personal writing is often the most shareable. I try to leave space for your own story inside mine.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+function viewWritings(){
+  return `
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>All writings</h2></div>
+      <div class="toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="writings-search" placeholder="Search by title or keyword…" aria-label="Search writings">
+        </div>
+      </div>
+      <div class="chip-row" id="writings-filters" style="margin-bottom:34px;">
+        <button class="chip active" data-filter="all">All</button>
+        ${CATEGORIES.map(c => `<button class="chip" data-filter="${c.slug}">${c.name}</button>`).join('')}
+      </div>
+      <div class="row-list" id="writings-list">
+        ${sortedByDateDesc(POSTS).map(rowHTML).join('')}
+      </div>
+      <div class="empty-state" id="writings-empty" style="display:none;">No writings match your search. Try a different word or category.</div>
+    </div>
+  </section>
+  `;
+}
+
+function viewCategories(){
+  return `
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head"><h2>Categories</h2></div>
+      <p class="lede" style="margin-bottom:40px;" data-reveal>Every piece on If No One Reads This lives in one of six rooms. Wander into whichever one matches your mood.</p>
+      <div class="cat-grid">
+        ${CATEGORIES.map(c => `
+          <a class="cat-card" href="#/category/${c.slug}" data-reveal>
+            <span class="swatch" style="background:${c.swatch}"></span>
+            <span class="cat-count">${postsInCategory(c.slug).length} pieces</span>
+            <h3>${c.name}</h3>
+            <p>${c.desc}</p>
+          </a>`).join('')}
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+function viewCategory(params){
+  const c = cat(params.slug);
+  if (!c) return view404();
+  const list = postsInCategory(params.slug);
+  return `
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>Category</p>
+      <div class="section-head">
+        <h2>${c.name}</h2>
+        <a class="view-all" href="#/categories">All categories →</a>
+      </div>
+      <p class="lede" data-reveal style="margin-bottom:36px;">${c.desc}</p>
+      ${list.length ? `<div class="row-list">${list.map(rowHTML).join('')}</div>` : `<div class="empty-state">Nothing published in this category yet.</div>`}
+    </div>
+  </section>
+  `;
+}
+
+function viewPost(params){
+  const post = POSTS.find(p => p.slug === params.slug);
+  if (!post) return view404();
+  const c = cat(post.category);
+  const all = sortedByDateDesc(POSTS);
+  const idx = all.findIndex(p => p.slug === post.slug);
+  const prev = all[idx+1];
+  const next = all[idx-1];
+  const bodyHtml = post.isPoem
+    ? `<p>${escapeHtml(post.body[0])}</p>`
+    : post.body.map(p => `<p>${p}</p>`).join('');
+
+  return `
+  <article>
+    <div class="post-hero">
+      <div class="wrap">
+        <p class="eyebrow" data-reveal>${c.name}</p>
+        <div class="post-meta-row" data-reveal>
+          <span>${fmtDate(post.date)}</span><span class="sep">·</span><span>${readingTime(post)}</span>
+        </div>
+        <h1 data-reveal>${post.title}</h1>
+        ${post.subtitle ? `<p class="subtitle" data-reveal>${post.subtitle}</p>` : ''}
+        <div class="post-tags" data-reveal>${post.tags.map(t => `<span class="tag-pill">${t}</span>`).join('')}</div>
+      </div>
+      <div class="wrap"><div class="post-cover ${c.class}" data-reveal></div></div>
+    </div>
+
+    <div class="post-layout">
+      <div class="ribbon-col">
+        <div class="ribbon-track"><div class="ribbon-fill" id="ribbon-fill"></div></div>
+      </div>
+      <div>
+        <div class="article-body ${post.isPoem ? 'is-poem' : ''}" id="article-body">
+          ${bodyHtml}
+        </div>
+
+        <div class="share-row">
+          <span>Share this piece</span>
+          <button class="share-btn" data-share="twitter" aria-label="Share on X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23.3 22h-7l-5.5-7.2L4.5 22H1.3l8.1-9.3L1 2h7.2l5 6.6L18.9 2zm-1.2 18h1.7L7.4 4H5.6l12.1 16z"/></svg></button>
+          <button class="share-btn" data-share="facebook" aria-label="Share on Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8.4h2.8l.4-3.3h-3.2V7.1c0-.9.3-1.6 1.6-1.6h1.7V2.5C16.5 2.4 15.4 2.3 14.2 2.3c-2.6 0-4.4 1.6-4.4 4.5v2.5H7v3.3h2.8V21h3.7z"/></svg></button>
+          <button class="share-btn" data-share="linkedin" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3V9zm7 0h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.85c0-1.4-.03-3.2-1.95-3.2-1.95 0-2.25 1.5-2.25 3.1V21h-4V9z"/></svg></button>
+          <button class="share-btn" data-share="copy" aria-label="Copy link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg></button>
+          <span id="copy-note" style="display:none;color:var(--accent-2);">Link copied.</span>
+        </div>
+
+        <div class="post-nav">
+          ${prev ? `<a href="#/post/${prev.slug}"><div class="dir">← Previous</div><div>${prev.title}</div></a>` : `<div></div>`}
+          ${next ? `<a href="#/post/${next.slug}" class="next"><div class="dir">Next →</div><div>${next.title}</div></a>` : `<div></div>`}
+        </div>
+      </div>
+    </div>
+  </article>
+  `;
+}
+
+function viewContact(){
+  return `
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>Get in touch</p>
+      <h1 data-reveal style="margin-bottom:14px;">Say hello.</h1>
+      <p class="lede" data-reveal style="margin-bottom:50px;">Whether it's a piece that stayed with you, a correction, or just a thought you want to share — I read every message myself.</p>
+      <div class="contact-grid">
+        <div data-reveal>
+          <form id="contact-form">
+            <div class="form-field">
+              <label for="cf-name">Name</label>
+              <input id="cf-name" type="text" required placeholder="Your name">
+            </div>
+            <div class="form-field">
+              <label for="cf-email">Email</label>
+              <input id="cf-email" type="email" required placeholder="you@example.com">
+            </div>
+            <div class="form-field">
+              <label for="cf-message">Message</label>
+              <textarea id="cf-message" required placeholder="What's on your mind?"></textarea>
+            </div>
+            <button class="btn" type="submit">Send message</button>
+            <div class="form-success" id="contact-success">Thank you — your message has been noted. (This form is a design placeholder; no messages are actually sent.)</div>
+          </form>
+        </div>
+        <div data-reveal>
+          <h3 style="font-size:20px;">Find me elsewhere</h3>
+          <div class="social-list">
+            <a href="mailto:hello@ifnoonereadsthis.blog">✉️ hello@ifnoonereadsthis.blog</a>
+            <a href="https://instagram.com" target="_blank" rel="noopener">📷 Instagram</a>
+            <a href="https://twitter.com" target="_blank" rel="noopener">✒️ X / Twitter</a>
+            <a href="https://goodreads.com" target="_blank" rel="noopener">📚 Goodreads</a>
+          </div>
+          <p class="lede" style="margin-top:32px; font-size:15px;">I try to reply within a week. If it's about a piece you'd like to reference or quote, just mention which one and where.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+function view404(){
+  return `
+  <section class="page-404">
+    <div class="wrap">
+      <div class="big">404</div>
+      <h1>This page hasn't been written yet.</h1>
+      <p class="lede" style="margin:0 auto 30px;">The piece you're looking for doesn't exist, moved, or was never more than a draft.</p>
+      <a class="btn" href="#/">Back to the desk</a>
+    </div>
+  </section>
+  `;
+}
+
+route('/', viewHome);
+route('/about', viewAbout);
+route('/writings', viewWritings);
+route('/categories', viewCategories);
+route('/category/:slug', viewCategory);
+route('/post/:slug', viewPost);
+route('/contact', viewContact);
+
+/* ===================================================================
+   DYNAMIC WIRING (per-view interactivity)
+=================================================================== */
+function wireDynamic(){
+  // All-writings search + filter
+  const searchInput = document.getElementById('writings-search');
+  const filterChips = document.querySelectorAll('#writings-filters .chip');
+  if (searchInput){
+    let activeFilter = 'all';
+    function applyWritingsFilter(){
+      const q = searchInput.value.trim().toLowerCase();
+      const list = document.getElementById('writings-list');
+      const empty = document.getElementById('writings-empty');
+      let visibleCount = 0;
+      const filtered = sortedByDateDesc(POSTS).filter(p => {
+        const matchesCat = activeFilter === 'all' || p.category === activeFilter;
+        const haystack = (p.title + ' ' + p.excerpt + ' ' + p.tags.join(' ')).toLowerCase();
+        const matchesQuery = !q || haystack.includes(q);
+        return matchesCat && matchesQuery;
+      });
+      list.innerHTML = filtered.map(rowHTML).join('');
+      visibleCount = filtered.length;
+      empty.style.display = visibleCount ? 'none' : 'block';
+      list.style.display = visibleCount ? 'flex' : 'none';
+      setupReveal();
+    }
+    searchInput.addEventListener('input', applyWritingsFilter);
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        filterChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeFilter = chip.dataset.filter;
+        applyWritingsFilter();
+      });
+    });
+  }
+
+  // Newsletter form (UI only)
+  // (bound once globally, see bottom)
+
+  // Contact form
+  const contactForm = document.getElementById('contact-form');
+  if (contactForm){
+    contactForm.addEventListener('submit', e => {
+      e.preventDefault();
+      document.getElementById('contact-success').classList.add('show');
+      contactForm.reset();
+    });
+  }
+
+  // Share buttons + reading progress ribbon on single post
+  const ribbon = document.getElementById('ribbon-fill');
+  const articleBody = document.getElementById('article-body');
+  if (ribbon && articleBody){
+    function updateRibbon(){
+      const rect = articleBody.getBoundingClientRect();
+      const total = rect.height - window.innerHeight * 0.4;
+      const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total,1));
+      const pct = total > 0 ? (scrolled / total) * 100 : 100;
+      ribbon.style.height = Math.min(100, Math.max(0, pct)) + '%';
+    }
+    document.addEventListener('scroll', updateRibbon, { passive:true });
+    updateRibbon();
+  }
+  document.querySelectorAll('[data-share]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = encodeURIComponent(location.href);
+      const title = encodeURIComponent(document.querySelector('.post-hero h1')?.textContent || 'If No One Reads This');
+      const kind = btn.dataset.share;
+      if (kind === 'copy'){
+        navigator.clipboard?.writeText(location.href).then(() => {
+          const note = document.getElementById('copy-note');
+          note.style.display = 'inline';
+          setTimeout(() => note.style.display = 'none', 2200);
+        });
+        return;
+      }
+      const shareUrls = {
+        twitter: `https://twitter.com/intent/tweet?text=${title}&url=${url}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+      };
+      window.open(shareUrls[kind], '_blank', 'noopener,width=600,height=500');
+    });
+  });
+}
+
+/* ===================================================================
+   SCROLL REVEAL
+=================================================================== */
+let revealObserver;
+function setupReveal(){
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const targets = document.querySelectorAll('[data-reveal], .card:not(.in-view), .row-item:not(.in-view)');
+  if (reduced){
+    targets.forEach(t => t.classList.add('in-view'));
+    return;
+  }
+  if (revealObserver) revealObserver.disconnect();
+  revealObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  targets.forEach(t => revealObserver.observe(t));
+}
+
+/* ===================================================================
+   TOP PROGRESS THREAD (whole-page scroll indicator)
+=================================================================== */
+function updateTopThread(){
+  const thread = document.getElementById('top-thread');
+  function onScroll(){
+    const h = document.documentElement;
+    const scrollTop = h.scrollTop || document.body.scrollTop;
+    const height = h.scrollHeight - h.clientHeight;
+    const pct = height > 0 ? (scrollTop / height) * 100 : 0;
+    thread.style.width = pct + '%';
+  }
+  document.removeEventListener('scroll', window.__threadHandler || (()=>{}));
+  window.__threadHandler = onScroll;
+  document.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+}
+
+/* ===================================================================
+   GLOBAL UI: theme, nav toggle, search overlay, back-to-top
+=================================================================== */
+function initTheme(){
+  const saved = localStorage.getItem('inrt-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+  updateThemeIcon(theme);
+}
+function updateThemeIcon(theme){
+  const icon = document.getElementById('theme-icon');
+  icon.innerHTML = theme === 'dark'
+    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('inrt-theme', next);
+  updateThemeIcon(next);
+});
+
+const menuToggle = document.getElementById('menu-toggle');
+const navLinks = document.getElementById('nav-links');
+menuToggle.addEventListener('click', () => {
+  const open = navLinks.classList.toggle('open');
+  menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+navLinks.addEventListener('click', e => {
+  if (e.target.tagName === 'A'){ navLinks.classList.remove('open'); menuToggle.setAttribute('aria-expanded','false'); }
+});
+
+// Search overlay
+const searchOverlay = document.getElementById('search-overlay');
+const searchOpen = document.getElementById('search-open');
+const searchClose = document.getElementById('search-close');
+const searchInputGlobal = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+function openSearch(){
+  searchOverlay.classList.add('open');
+  setTimeout(() => searchInputGlobal.focus(), 50);
+}
+function closeSearch(){
+  searchOverlay.classList.remove('open');
+  searchInputGlobal.value = '';
+  searchResults.innerHTML = '';
+}
+searchOpen.addEventListener('click', openSearch);
+searchClose.addEventListener('click', closeSearch);
+searchOverlay.addEventListener('click', e => { if (e.target === searchOverlay) closeSearch(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSearch();
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k'){ e.preventDefault(); openSearch(); }
+});
+searchInputGlobal.addEventListener('input', () => {
+  const q = searchInputGlobal.value.trim().toLowerCase();
+  if (!q){ searchResults.innerHTML = ''; return; }
+  const results = POSTS.filter(p => (p.title + ' ' + p.excerpt + ' ' + p.tags.join(' ')).toLowerCase().includes(q)).slice(0,8);
+  searchResults.innerHTML = results.length
+    ? results.map(p => `<a href="#/post/${p.slug}"><span class="sr-cat">${cat(p.category).name}</span><br>${p.title}</a>`).join('')
+    : `<a href="#" style="pointer-events:none;color:var(--text-muted);">No writings found for "${escapeHtml(searchInputGlobal.value)}"</a>`;
+});
+searchResults.addEventListener('click', () => closeSearch());
+
+// Back to top
+const backToTop = document.getElementById('back-to-top');
+document.addEventListener('scroll', () => {
+  backToTop.classList.toggle('show', window.scrollY > 500);
+}, { passive:true });
+backToTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+// Newsletter (UI only, bound once)
+document.getElementById('newsletter-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const note = document.getElementById('newsletter-note');
+  note.textContent = "You're on the list. Thank you for reading. (Design placeholder — no emails are collected.)";
+});
+
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ===================================================================
+   INIT
+=================================================================== */
+initTheme();
+window.addEventListener('hashchange', render);
+window.addEventListener('load', render);
+render();
+</script>
+</body>
+</html>
