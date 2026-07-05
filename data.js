@@ -20,6 +20,7 @@
     auth: "inrt_auth_password",
     seeded: "inrt_seeded_v1",
     views: "inrt_views_log",
+    settings: "inrt_settings",
   };
   const MAX_VIEW_LOG = 5000;
   const SESSION_KEY = "inrt_admin_session";
@@ -507,6 +508,17 @@
     },
     clearViews() {
       writeJSON(LS.views, []);
+    },
+
+    /* ---- site settings (e.g. About page photo) ---- */
+    getSettings() {
+      return readJSON(LS.settings, { aboutPhoto: "" });
+    },
+    saveSettings(partial) {
+      const current = this.getSettings();
+      const updated = Object.assign({}, current, partial);
+      writeJSON(LS.settings, updated);
+      return updated;
     },
 
     /* ---- helpers exposed for views ---- */
