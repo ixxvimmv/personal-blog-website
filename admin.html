@@ -168,10 +168,14 @@ function viewLogin(){
     <div class="login-card">
       <div class="brand-mark">If No One Reads This</div>
       <p class="lede-sm">Admin dashboard — sign in to manage your writing.</p>
-      <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+      <div class="login-error" id="login-error">Incorrect username or password. Try again.</div>
+      <div class="field-group">
+        <label class="field-label" for="login-user">Username</label>
+        <input class="field-input" type="text" id="login-user" placeholder="Enter admin username" autofocus autocomplete="username">
+      </div>
       <div class="field-group">
         <label class="field-label" for="login-pass">Password</label>
-        <input class="field-input" type="password" id="login-pass" placeholder="Enter admin password" autofocus>
+        <input class="field-input" type="password" id="login-pass" placeholder="Enter admin password" autocomplete="current-password">
       </div>
       <button class="btn" style="width:100%;justify-content:center;" id="login-btn">Sign in</button>
     </div>
@@ -179,9 +183,10 @@ function viewLogin(){
 }
 function wireLogin(){
   const btn = document.getElementById('login-btn');
-  const input = document.getElementById('login-pass');
+  const userInput = document.getElementById('login-user');
+  const passInput = document.getElementById('login-pass');
   function tryLogin(){
-    if (CMS.login(input.value)){
+    if (CMS.login(userInput.value, passInput.value)){
       CMS.markKnownDevice();
       location.hash = '/dashboard';
     } else {
@@ -189,7 +194,8 @@ function wireLogin(){
     }
   }
   btn.addEventListener('click', tryLogin);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  userInput.addEventListener('keydown', e => { if (e.key === 'Enter') passInput.focus(); });
+  passInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
 }
 
 /* ===================================================================
@@ -895,8 +901,29 @@ function wireAnalyticsAdmin(){
 =================================================================== */
 function viewSettingsAdmin(){
   const settings = CMS.getSettings();
+  const currentUsername = CMS.getUsername();
   return `
   <div class="admin-topbar"><h1>Settings</h1></div>
+
+  <div class="admin-panel" style="max-width:520px;">
+    <h3>Login &amp; security</h3>
+    <p class="field-hint" style="margin-bottom:16px;">This is the username and password used to sign in to this dashboard. Changing either takes effect immediately — you'll use the new one next time you log in.</p>
+    <div id="creds-success" class="form-success" style="margin-top:0;margin-bottom:18px;">Login details updated.</div>
+    <div class="field-group">
+      <label class="field-label" for="f-username">Username</label>
+      <input class="field-input" id="f-username" value="${escapeHtml(currentUsername)}" autocomplete="username">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="f-new-password">New password <span style="font-weight:400;color:var(--text-faint);">(leave blank to keep current password)</span></label>
+      <input class="field-input" type="password" id="f-new-password" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="f-confirm-password">Confirm new password</label>
+      <input class="field-input" type="password" id="f-confirm-password" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <button class="btn" id="save-creds-btn">Save login details</button>
+  </div>
+
   <div class="admin-panel" style="max-width:520px;">
     <h3>About page photo</h3>
     <p class="field-hint" style="margin-bottom:16px;">Shown at the top of your public About page. Leave empty to use the default monogram instead.</p>
@@ -914,6 +941,29 @@ function viewSettingsAdmin(){
   `;
 }
 function wireSettingsAdmin(){
+  const saveCredsBtn = document.getElementById('save-creds-btn');
+  if (saveCredsBtn){
+    saveCredsBtn.addEventListener('click', () => {
+      const username = document.getElementById('f-username').value.trim();
+      const newPass = document.getElementById('f-new-password').value;
+      const confirmPass = document.getElementById('f-confirm-password').value;
+
+      if (!username){ toast('Username cannot be empty.'); return; }
+      if (newPass || confirmPass){
+        if (newPass.length < 4){ toast('New password should be at least 4 characters.'); return; }
+        if (newPass !== confirmPass){ toast('New password and confirmation don\u2019t match.'); return; }
+      }
+
+      CMS.changeCredentials(username, newPass || undefined);
+      document.getElementById('f-new-password').value = '';
+      document.getElementById('f-confirm-password').value = '';
+      const successEl = document.getElementById('creds-success');
+      successEl.classList.add('show');
+      setTimeout(() => successEl.classList.remove('show'), 3000);
+      toast('Login details updated.');
+    });
+  }
+
   const chooseBtn = document.getElementById('choose-about-photo-btn');
   if (!chooseBtn) return;
   chooseBtn.addEventListener('click', () => {
