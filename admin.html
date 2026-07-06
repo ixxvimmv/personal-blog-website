@@ -39,13 +39,14 @@ function toast(msg){
   window.__toastT = setTimeout(() => el.classList.remove('show'), 2600);
 }
 function computeStatus(post){
+  if (post.status === 'archived') return 'archived';
   if (post.status === 'draft') return 'draft';
   if (post.status === 'published' && new Date(post.publishDate) > new Date()) return 'scheduled';
   return post.status; // published
 }
 function statusBadge(post){
   const s = computeStatus(post);
-  const label = s === 'scheduled' ? 'Scheduled' : s === 'draft' ? 'Draft' : 'Published';
+  const label = s === 'scheduled' ? 'Scheduled' : s === 'draft' ? 'Draft' : s === 'archived' ? 'Archived' : 'Published';
   return `<span class="badge badge-${s}">${label}</span>`;
 }
 
@@ -199,6 +200,7 @@ function viewDashboard(){
   const published = posts.filter(p => computeStatus(p) === 'published');
   const drafts = posts.filter(p => computeStatus(p) === 'draft');
   const scheduled = posts.filter(p => computeStatus(p) === 'scheduled');
+  const archived = posts.filter(p => computeStatus(p) === 'archived');
   const cats = CMS.getCategories();
   const tags = CMS.getTags();
   const recent = [...posts].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0,6);
@@ -210,7 +212,7 @@ function viewDashboard(){
     <div class="stat-card"><div class="stat-num">${published.length}</div><div class="stat-label">Published</div></div>
     <div class="stat-card"><div class="stat-num">${drafts.length}</div><div class="stat-label">Drafts</div></div>
     <div class="stat-card"><div class="stat-num">${scheduled.length}</div><div class="stat-label">Scheduled</div></div>
-    <div class="stat-card"><div class="stat-num">${CMS.getTotalViews().toLocaleString()}</div><div class="stat-label">Total views</div></div>
+    <div class="stat-card"><div class="stat-num">${archived.length}</div><div class="stat-label">Archived</div></div>
   </div>
   <div class="admin-panel">
     <h3>Recent activity</h3>
@@ -232,10 +234,23 @@ function viewDashboard(){
 /* ===================================================================
    WRITINGS LIST VIEW
 =================================================================== */
+let currentWritingsFilter = 'active'; // 'active' | 'archived'
+
 function viewWritingsList(){
-  const posts = [...CMS.getAllPosts()].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  const all = [...CMS.getAllPosts()].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  const archivedCount = all.filter(p => computeStatus(p) === 'archived').length;
+  const posts = all.filter(p => currentWritingsFilter === 'archived'
+    ? computeStatus(p) === 'archived'
+    : computeStatus(p) !== 'archived');
+
   return `
   <div class="admin-topbar"><h1>Writings</h1><a class="btn" href="#/writings/new">+ New writing</a></div>
+
+  <div class="seg-tabs" id="writings-view-tabs">
+    <button data-view="active" class="${currentWritingsFilter==='active'?'active':''}">All writings</button>
+    <button data-view="archived" class="${currentWritingsFilter==='archived'?'active':''}">Archived (${archivedCount})</button>
+  </div>
+
   <div class="admin-panel" style="padding:0;">
     <div class="table-wrap">
     <table class="admin-table">
@@ -251,12 +266,18 @@ function viewWritingsList(){
           <td>${CMS.getViewsForPost(p.slug).toLocaleString()}</td>
           <td>
             <div class="row-actions">
-              <a class="btn-icon" href="#/writings/edit/${p.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
-              <button class="btn-icon" data-dup="${p.id}" title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-              <button class="btn-icon" data-del="${p.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              ${currentWritingsFilter === 'archived' ? `
+                <button class="btn-icon" data-restore="${p.id}" title="Restore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 9 9 9"/></svg></button>
+                <button class="btn-icon" data-del="${p.id}" title="Delete permanently"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              ` : `
+                <a class="btn-icon" href="#/writings/edit/${p.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+                <button class="btn-icon" data-dup="${p.id}" title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="btn-icon" data-archive="${p.id}" title="Archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+                <button class="btn-icon" data-del="${p.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              `}
             </div>
           </td>
-        </tr>`).join('') : `<tr><td colspan="7"><div class="admin-empty">No writings yet. <a href="#/writings/new">Create your first one</a>.</div></td></tr>`}
+        </tr>`).join('') : `<tr><td colspan="7"><div class="admin-empty">${currentWritingsFilter === 'archived' ? 'No archived writings. Anything you archive will show up here.' : `No writings yet. <a href="#/writings/new">Create your first one</a>.`}</div></td></tr>`}
       </tbody>
     </table>
     </div>
@@ -264,18 +285,50 @@ function viewWritingsList(){
   `;
 }
 function wireWritingsList(){
+  const tabs = document.getElementById('writings-view-tabs');
+  if (tabs){
+    tabs.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-view]');
+      if (!btn) return;
+      currentWritingsFilter = btn.dataset.view;
+      render();
+    });
+  }
+
   const tbody = document.getElementById('writings-tbody');
   if (!tbody) return;
   tbody.addEventListener('click', e => {
     const dup = e.target.closest('[data-dup]');
     const del = e.target.closest('[data-del]');
+    const archiveBtn = e.target.closest('[data-archive]');
+    const restoreBtn = e.target.closest('[data-restore]');
+
     if (dup){ CMS.duplicatePost(dup.dataset.dup); toast('Writing duplicated as a draft.'); render(); }
+
     if (del){
       confirmAction('This will permanently delete this writing.', () => {
         CMS.deletePost(del.dataset.del);
         toast('Writing deleted.');
         render();
       });
+    }
+
+    if (archiveBtn){
+      const post = CMS.getPostById(archiveBtn.dataset.archive);
+      if (post){
+        CMS.savePost(Object.assign({}, post, { previousStatus: post.status, status: 'archived' }));
+        toast('Writing archived. You can restore it anytime.');
+        render();
+      }
+    }
+
+    if (restoreBtn){
+      const post = CMS.getPostById(restoreBtn.dataset.restore);
+      if (post){
+        CMS.savePost(Object.assign({}, post, { status: post.previousStatus || 'draft' }));
+        toast('Writing restored.');
+        render();
+      }
     }
   });
 }
@@ -372,32 +425,40 @@ function viewWritingEditor(params){
   const cats = CMS.getCategories();
   const tags = CMS.getTags();
   const p = post || { title:'', subtitle:'', content:'', category: cats[0]?.slug || '', tags:[], coverImage:'', status:'draft', featured:false, seoTitle:'', metaDescription:'', slug:'', publishDate:'' };
+  const isArchived = isEdit && computeStatus(post) === 'archived';
 
   return `
   <div class="admin-topbar">
     <h1>${isEdit ? 'Edit writing' : 'New writing'}</h1>
     <div style="display:flex;gap:10px;">
       <a class="btn ghost" href="#/writings">Cancel</a>
-      <button class="btn ghost" id="save-draft-btn">Save draft</button>
-      <button class="btn" id="publish-btn">${p.status==='published' && new Date(p.publishDate) <= new Date() ? 'Update' : 'Publish'}</button>
+      ${isEdit ? `<button class="btn ghost" id="archive-toggle-btn">${isArchived ? 'Restore' : 'Archive'}</button>` : ''}
+      ${!isArchived ? `
+        <button class="btn ghost" id="save-draft-btn">Save draft</button>
+        <button class="btn" id="publish-btn">${p.status==='published' && new Date(p.publishDate) <= new Date() ? 'Update' : 'Publish'}</button>
+      ` : ''}
     </div>
   </div>
+
+  ${isArchived ? `<div class="admin-panel" style="border-color:var(--line-strong);background:var(--bg-soft);">
+    <p style="font-family:var(--sans);font-size:14px;color:var(--text-muted);margin:0;">This writing is archived and hidden from the live site. Restore it to edit or publish it again.</p>
+  </div>` : ''}
 
   <div class="admin-form-grid">
     <div>
       <div class="admin-panel">
         <div class="field-group">
           <label class="field-label" for="f-title">Title</label>
-          <input class="field-input" id="f-title" value="${escapeHtml(p.title)}" placeholder="A working title">
+          <input class="field-input" id="f-title" value="${escapeHtml(p.title)}" placeholder="A working title" ${isArchived?'disabled':''}>
         </div>
         <div class="field-group">
           <label class="field-label" for="f-subtitle">Subtitle <span style="font-weight:400;color:var(--text-faint);">(optional)</span></label>
-          <input class="field-input" id="f-subtitle" value="${escapeHtml(p.subtitle)}" placeholder="A short subtitle">
+          <input class="field-input" id="f-subtitle" value="${escapeHtml(p.subtitle)}" placeholder="A short subtitle" ${isArchived?'disabled':''}>
         </div>
         <div class="field-group">
           <label class="field-label">Content</label>
           ${editorToolbarHtml()}
-          <div class="editor-surface" id="f-content" contenteditable="true" data-placeholder="Start writing…">${p.content || ''}</div>
+          <div class="editor-surface" id="f-content" contenteditable="${isArchived ? 'false' : 'true'}" data-placeholder="Start writing…">${p.content || ''}</div>
         </div>
       </div>
 
@@ -405,16 +466,16 @@ function viewWritingEditor(params){
         <h3>SEO &amp; metadata</h3>
         <div class="field-group">
           <label class="field-label" for="f-slug">URL slug</label>
-          <input class="field-input" id="f-slug" value="${escapeHtml(p.slug)}" placeholder="auto-generated-from-title">
+          <input class="field-input" id="f-slug" value="${escapeHtml(p.slug)}" placeholder="auto-generated-from-title" ${isArchived?'disabled':''}>
           <p class="field-hint">Leave blank to auto-generate from the title.</p>
         </div>
         <div class="field-group">
           <label class="field-label" for="f-seo-title">SEO title</label>
-          <input class="field-input" id="f-seo-title" value="${escapeHtml(p.seoTitle)}" placeholder="Defaults to the writing's title">
+          <input class="field-input" id="f-seo-title" value="${escapeHtml(p.seoTitle)}" placeholder="Defaults to the writing's title" ${isArchived?'disabled':''}>
         </div>
         <div class="field-group">
           <label class="field-label" for="f-meta-desc">Meta description</label>
-          <textarea class="field-textarea" id="f-meta-desc" placeholder="A one or two sentence summary for search engines">${escapeHtml(p.metaDescription)}</textarea>
+          <textarea class="field-textarea" id="f-meta-desc" placeholder="A one or two sentence summary for search engines" ${isArchived?'disabled':''}>${escapeHtml(p.metaDescription)}</textarea>
         </div>
       </div>
     </div>
@@ -427,26 +488,26 @@ function viewWritingEditor(params){
           <div class="cover-picker">
             ${p.coverImage ? `<img class="cover-preview" id="cover-preview" src="${p.coverImage}">` : `<div class="cover-preview-empty" id="cover-preview-empty">No cover image</div>`}
             <input type="hidden" id="f-cover" value="${escapeHtml(p.coverImage)}">
-            <button type="button" class="btn ghost small" id="choose-cover-btn" style="width:100%;justify-content:center;">Choose image</button>
+            <button type="button" class="btn ghost small" id="choose-cover-btn" style="width:100%;justify-content:center;" ${isArchived?'disabled':''}>Choose image</button>
           </div>
         </div>
         <div class="field-group">
           <label class="field-label" for="f-category">Category</label>
-          <select class="field-select" id="f-category">${cats.map(c => `<option value="${c.slug}" ${p.category===c.slug?'selected':''}>${c.name}</option>`).join('')}</select>
+          <select class="field-select" id="f-category" ${isArchived?'disabled':''}>${cats.map(c => `<option value="${c.slug}" ${p.category===c.slug?'selected':''}>${c.name}</option>`).join('')}</select>
         </div>
         <div class="field-group">
           <label class="field-label">Tags</label>
           <div class="tag-picker" id="tag-picker">
-            ${tags.map(t => `<button type="button" class="tag-pick ${p.tags.includes(t.slug)?'selected':''}" data-tag="${t.slug}">#${t.name}</button>`).join('') || '<span class="field-hint">No tags yet — add some in Tag Management.</span>'}
+            ${tags.map(t => `<button type="button" class="tag-pick ${p.tags.includes(t.slug)?'selected':''}" data-tag="${t.slug}" ${isArchived?'disabled':''}>#${t.name}</button>`).join('') || '<span class="field-hint">No tags yet — add some in Tag Management.</span>'}
           </div>
         </div>
         <div class="field-group">
           <label class="field-label" for="f-pubdate">Publish date &amp; time</label>
-          <input class="field-input" type="datetime-local" id="f-pubdate" value="${fmtDateTimeInput(p.publishDate) || fmtDateTimeInput(new Date().toISOString())}">
+          <input class="field-input" type="datetime-local" id="f-pubdate" value="${fmtDateTimeInput(p.publishDate) || fmtDateTimeInput(new Date().toISOString())}" ${isArchived?'disabled':''}>
           <p class="field-hint">Set this in the future and publish to schedule the post.</p>
         </div>
         <div class="field-group checkbox-row">
-          <input type="checkbox" id="f-featured" ${p.featured ? 'checked' : ''}>
+          <input type="checkbox" id="f-featured" ${p.featured ? 'checked' : ''} ${isArchived?'disabled':''}>
           <label for="f-featured">Feature this writing on the homepage</label>
         </div>
         ${isEdit ? `<p class="field-hint">Created ${fmtDate(p.createdAt)} · Last updated ${fmtDate(p.updatedAt)}</p>` : ''}
@@ -458,6 +519,26 @@ function viewWritingEditor(params){
 function wireWritingEditor(params){
   const contentSurface = document.getElementById('f-content');
   if (!contentSurface) return;
+
+  const archiveToggleBtn = document.getElementById('archive-toggle-btn');
+  if (archiveToggleBtn){
+    archiveToggleBtn.addEventListener('click', () => {
+      const existing = CMS.getPostById(params.id);
+      if (!existing) return;
+      if (computeStatus(existing) === 'archived'){
+        CMS.savePost(Object.assign({}, existing, { status: existing.previousStatus || 'draft' }));
+        toast('Writing restored.');
+      } else {
+        CMS.savePost(Object.assign({}, existing, { previousStatus: existing.status, status: 'archived' }));
+        toast('Writing archived. You can restore it anytime.');
+      }
+      location.hash = '/writings';
+    });
+  }
+
+  // Archived writings are read-only in the editor — skip wiring the editing controls.
+  if (contentSurface.getAttribute('contenteditable') === 'false') return;
+
   wireEditor('f-content', document.querySelector('.editor-toolbar'));
 
   document.querySelectorAll('#tag-picker .tag-pick').forEach(btn => {
@@ -497,20 +578,26 @@ function wireWritingEditor(params){
     };
   }
 
-  document.getElementById('save-draft-btn').addEventListener('click', () => {
-    const record = CMS.savePost(collect('draft'));
-    toast('Draft saved.');
-    location.hash = '/writings/edit/' + record.id;
-    render();
-  });
-  document.getElementById('publish-btn').addEventListener('click', () => {
-    const data = collect('published');
-    const future = new Date(data.publishDate) > new Date();
-    const record = CMS.savePost(data);
-    toast(future ? 'Writing scheduled.' : 'Writing published.');
-    location.hash = '/writings/edit/' + record.id;
-    render();
-  });
+  const saveDraftBtn = document.getElementById('save-draft-btn');
+  if (saveDraftBtn){
+    saveDraftBtn.addEventListener('click', () => {
+      const record = CMS.savePost(collect('draft'));
+      toast('Draft saved.');
+      location.hash = '/writings/edit/' + record.id;
+      render();
+    });
+  }
+  const publishBtn = document.getElementById('publish-btn');
+  if (publishBtn){
+    publishBtn.addEventListener('click', () => {
+      const data = collect('published');
+      const future = new Date(data.publishDate) > new Date();
+      const record = CMS.savePost(data);
+      toast(future ? 'Writing scheduled.' : 'Writing published.');
+      location.hash = '/writings/edit/' + record.id;
+      render();
+    });
+  }
 }
 
 /* ===================================================================
