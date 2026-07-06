@@ -9,10 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-<!-- Optional: enables real confirmation emails when subscribing. Free to set up at
-     https://www.emailjs.com — safe to leave as-is if you don't want this; the
-     newsletter form still works and stores subscribers either way. See README. -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -41,6 +37,9 @@
       <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode">
         <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
+      <a class="icon-btn" href="admin.html" id="admin-link" aria-label="Admin dashboard" title="Admin dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 3 7v6c0 5 4 9 9 9s9-4 9-9V7z"/></svg>
+      </a>
       <button class="icon-btn nav-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
@@ -49,18 +48,6 @@
 </header>
 
 <main id="main" tabindex="-1"></main>
-
-<div class="newsletter" data-reveal>
-  <div class="wrap">
-    <h2>Letters from the desk</h2>
-    <p>Once in a while — never more than twice a month — a new piece lands in your inbox before it's shared anywhere else.</p>
-    <form class="newsletter-form" id="newsletter-form">
-      <input type="email" placeholder="you@example.com" required aria-label="Email address">
-      <button class="btn" type="submit">Subscribe</button>
-    </form>
-    <p class="newsletter-note" id="newsletter-note">No spam. Unsubscribe whenever you like.</p>
-  </div>
-</div>
 
 <footer class="site-footer">
   <div class="wrap">
@@ -118,22 +105,6 @@
 <script src="data.js"></script>
 <script>
 CMS.init();
-
-/* ---------------------------------------------------------------
-   OPTIONAL: real confirmation emails for newsletter subscribers.
-   Fill these in with your own free EmailJS account (emailjs.com) to
-   send an actual email when someone subscribes. Leave blank and the
-   form still works — subscribers are safely stored and viewable in
-   the admin dashboard, they just won't get an automatic email yet.
---------------------------------------------------------------- */
-const EMAILJS_CONFIG = {
-  serviceId: "",   // e.g. "service_abc123"
-  templateId: "",  // e.g. "template_xyz789"
-  publicKey: "",   // e.g. "AbCdEfGhIjKlMnOp"
-};
-if (EMAILJS_CONFIG.publicKey && window.emailjs) {
-  emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
-}
 
 /* ===================================================================
    HELPERS
@@ -769,34 +740,93 @@ const backToTop = document.getElementById('back-to-top');
 document.addEventListener('scroll', () => backToTop.classList.toggle('show', window.scrollY > 500), { passive:true });
 backToTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
 
-document.getElementById('newsletter-form').addEventListener('submit', e => {
-  e.preventDefault();
-  const form = e.target;
-  const emailInput = form.querySelector('input[type="email"]');
-  const note = document.getElementById('newsletter-note');
-  const result = CMS.addSubscriber(emailInput.value);
-
-  if (!result.ok && result.existing){
-    note.textContent = "You're already on the list — thank you!";
-    return;
-  }
-  if (!result.ok){
-    note.textContent = result.reason || "Please enter a valid email address.";
-    return;
-  }
-
-  const canSendReal = EMAILJS_CONFIG.serviceId && EMAILJS_CONFIG.templateId && EMAILJS_CONFIG.publicKey && window.emailjs;
-  if (canSendReal){
-    emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, { to_email: emailInput.value })
-      .then(() => { note.textContent = "You're on the list — check your inbox for a confirmation email."; })
-      .catch(() => { note.textContent = "You're on the list. (The confirmation email failed to send — check your EmailJS setup.)"; });
-  } else {
-    note.textContent = "You're on the list. Thank you for reading.";
-  }
-  form.reset();
-});
-
 document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ===================================================================
+   INTERACTIVITY: custom cursor + magnetic buttons + click ripple
+=================================================================== */
+(function initInteractivity(){
+  const fine = window.matchMedia('(pointer: fine)').matches;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- custom cursor (skipped on touch devices / reduced motion) ---- */
+  if (fine && !reduced){
+    document.body.classList.add('custom-cursor-active');
+    const dot = document.createElement('div'); dot.className = 'cursor-dot';
+    const ring = document.createElement('div'); ring.className = 'cursor-ring';
+    document.body.append(dot, ring);
+
+    let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100;
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%,-50%)`;
+    });
+    (function loop(){
+      ringX += (mouseX - ringX) * 0.18;
+      ringY += (mouseY - ringY) * 0.18;
+      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%,-50%)`;
+      requestAnimationFrame(loop);
+    })();
+    document.addEventListener('mousedown', () => ring.classList.add('click'));
+    document.addEventListener('mouseup', () => ring.classList.remove('click'));
+
+    // Re-bind hover targets after every SPA render (content is rebuilt each navigation)
+    function bindCursorTargets(){
+      document.querySelectorAll('a, button, .card, .chip, .cat-card, .row-item, .tag-pill').forEach(el => {
+        if (el.dataset.cursorBound) return;
+        el.dataset.cursorBound = '1';
+        el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+        el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
+      });
+      document.querySelectorAll('input, textarea').forEach(el => {
+        if (el.dataset.cursorBound) return;
+        el.dataset.cursorBound = '1';
+        el.addEventListener('mouseenter', () => { dot.style.opacity = '0'; ring.style.opacity = '0'; });
+        el.addEventListener('mouseleave', () => { dot.style.opacity = ''; ring.style.opacity = ''; });
+      });
+    }
+    bindCursorTargets();
+    window.addEventListener('hashchange', () => setTimeout(bindCursorTargets, 60));
+    const cursorObserver = new MutationObserver(() => bindCursorTargets());
+    cursorObserver.observe(document.getElementById('main'), { childList: true, subtree: true });
+  }
+
+  /* ---- magnetic buttons (nudge toward the cursor while hovered) ---- */
+  if (fine && !reduced){
+    function bindMagnetic(){
+      document.querySelectorAll('.btn, .icon-btn').forEach(btn => {
+        if (btn.dataset.magnetic) return;
+        btn.dataset.magnetic = '1';
+        btn.addEventListener('mousemove', e => {
+          const r = btn.getBoundingClientRect();
+          const x = e.clientX - r.left - r.width / 2;
+          const y = e.clientY - r.top - r.height / 2;
+          btn.style.transform = `translate(${x * 0.22}px, ${y * 0.22}px)`;
+        });
+        btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+      });
+    }
+    bindMagnetic();
+    window.addEventListener('hashchange', () => setTimeout(bindMagnetic, 60));
+    const magneticObserver = new MutationObserver(() => bindMagnetic());
+    magneticObserver.observe(document.getElementById('main'), { childList: true, subtree: true });
+  }
+
+  /* ---- ripple on click, any .btn ---- */
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.btn');
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const size = Math.max(r.width, r.height);
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - r.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - r.top - size / 2) + 'px';
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 650);
+  });
+})();
 
 /* ===================================================================
    INIT
