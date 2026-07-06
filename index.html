@@ -743,53 +743,11 @@ backToTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smo
 document.getElementById('year').textContent = new Date().getFullYear();
 
 /* ===================================================================
-   INTERACTIVITY: custom cursor + magnetic buttons + click ripple
+   INTERACTIVITY: magnetic buttons + click ripple
 =================================================================== */
 (function initInteractivity(){
   const fine = window.matchMedia('(pointer: fine)').matches;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* ---- custom cursor (skipped on touch devices / reduced motion) ---- */
-  if (fine && !reduced){
-    document.body.classList.add('custom-cursor-active');
-    const dot = document.createElement('div'); dot.className = 'cursor-dot';
-    const ring = document.createElement('div'); ring.className = 'cursor-ring';
-    document.body.append(dot, ring);
-
-    let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100;
-    document.addEventListener('mousemove', e => {
-      mouseX = e.clientX; mouseY = e.clientY;
-      dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%,-50%)`;
-    });
-    (function loop(){
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
-      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%,-50%)`;
-      requestAnimationFrame(loop);
-    })();
-    document.addEventListener('mousedown', () => ring.classList.add('click'));
-    document.addEventListener('mouseup', () => ring.classList.remove('click'));
-
-    // Re-bind hover targets after every SPA render (content is rebuilt each navigation)
-    function bindCursorTargets(){
-      document.querySelectorAll('a, button, .card, .chip, .cat-card, .row-item, .tag-pill').forEach(el => {
-        if (el.dataset.cursorBound) return;
-        el.dataset.cursorBound = '1';
-        el.addEventListener('mouseenter', () => ring.classList.add('hover'));
-        el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
-      });
-      document.querySelectorAll('input, textarea').forEach(el => {
-        if (el.dataset.cursorBound) return;
-        el.dataset.cursorBound = '1';
-        el.addEventListener('mouseenter', () => { dot.style.opacity = '0'; ring.style.opacity = '0'; });
-        el.addEventListener('mouseleave', () => { dot.style.opacity = ''; ring.style.opacity = ''; });
-      });
-    }
-    bindCursorTargets();
-    window.addEventListener('hashchange', () => setTimeout(bindCursorTargets, 60));
-    const cursorObserver = new MutationObserver(() => bindCursorTargets());
-    cursorObserver.observe(document.getElementById('main'), { childList: true, subtree: true });
-  }
 
   /* ---- magnetic buttons (nudge toward the cursor while hovered) ---- */
   if (fine && !reduced){
