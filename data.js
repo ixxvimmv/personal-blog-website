@@ -18,6 +18,7 @@
     tags: "inrt_tags",
     media: "inrt_media",
     auth: "inrt_auth_password",
+    authUser: "inrt_auth_username",
     seeded: "inrt_seeded_v1",
     views: "inrt_views_log",
     settings: "inrt_settings",
@@ -263,6 +264,7 @@
     writeJSON(LS.posts, DEFAULT_POSTS);
     writeJSON(LS.media, []);
     localStorage.setItem(LS.auth, "admin123");
+    localStorage.setItem(LS.authUser, "admin");
     writeJSON(LS.seeded, true);
   }
 
@@ -426,9 +428,12 @@
     },
 
     /* ---- auth ---- */
-    login(password) {
-      const real = localStorage.getItem(LS.auth) || "admin123";
-      if (password === real) {
+    login(username, password) {
+      const realUser = localStorage.getItem(LS.authUser) || "admin";
+      const realPass = localStorage.getItem(LS.auth) || "admin123";
+      const userOk = String(username || "").trim().toLowerCase() === realUser.toLowerCase();
+      const passOk = password === realPass;
+      if (userOk && passOk) {
         sessionStorage.setItem(SESSION_KEY, "1");
         return true;
       }
@@ -440,8 +445,18 @@
     isAuthed() {
       return sessionStorage.getItem(SESSION_KEY) === "1";
     },
+    getUsername() {
+      return localStorage.getItem(LS.authUser) || "admin";
+    },
     changePassword(newPass) {
       localStorage.setItem(LS.auth, newPass);
+    },
+    changeUsername(newUser) {
+      localStorage.setItem(LS.authUser, String(newUser || "").trim() || "admin");
+    },
+    changeCredentials(newUser, newPass) {
+      if (newUser) this.changeUsername(newUser);
+      if (newPass) this.changePassword(newPass);
     },
     /* Persistent (not session-based) flag set the first time you log in
        successfully on a given browser. Lets the public site show the
