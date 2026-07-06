@@ -129,12 +129,19 @@ ul{ margin:0; padding:0; list-style:none; }
 .btn{
   display:inline-flex; align-items:center; gap:8px; font-family: var(--sans); font-size:14px; font-weight:600;
   padding: 12px 22px; border-radius: var(--radius); border:1px solid var(--accent); cursor:pointer;
-  text-decoration:none; transition: all .2s ease; background: var(--accent); color:#fff;
+  text-decoration:none; transition: transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  background: var(--accent); color:#fff; position: relative; overflow: hidden;
 }
 .btn:hover{ background: transparent; color: var(--accent); }
 .btn.ghost{ background: transparent; color: var(--text); border-color: var(--line-strong); }
 .btn.ghost:hover{ border-color: var(--accent); color: var(--accent); }
 .btn.small{ padding: 8px 14px; font-size:13px; }
+.btn .ripple{
+  position:absolute; border-radius:50%; background: currentColor; opacity:.28; pointer-events:none;
+  transform: scale(0); animation: rippleAnim .6s ease-out forwards;
+}
+@keyframes rippleAnim{ to{ transform: scale(2.6); opacity:0; } }
+@media (prefers-reduced-motion: reduce){ .btn .ripple{ display:none; } }
 
 /* ============ HOME: HERO ============ */
 .hero{
@@ -597,3 +604,40 @@ ul{ margin:0; padding:0; list-style:none; }
 
 /* ---- empty admin state ---- */
 .admin-empty{ text-align:center; padding: 60px 20px; color: var(--text-muted); font-family: var(--sans); }
+
+/* ============ CUSTOM CURSOR (public site only) ============ */
+.cursor-dot, .cursor-ring{
+  position: fixed; top:0; left:0; border-radius:50%; pointer-events:none; z-index: 9999;
+  transform: translate(-50%,-50%); will-change: transform;
+}
+.cursor-dot{
+  width:7px; height:7px; background: var(--accent); transition: opacity .2s ease, background .2s ease;
+}
+.cursor-ring{
+  width:34px; height:34px; border:1.5px solid var(--accent); opacity:.55;
+  transition: width .25s ease, height .25s ease, opacity .25s ease, background .25s ease, border-color .25s ease;
+}
+.cursor-ring.hover{
+  width:60px; height:60px; opacity:1; background: var(--accent-soft); border-color: transparent;
+}
+.cursor-ring.click{ width:28px; height:28px; }
+body.custom-cursor-active,
+body.custom-cursor-active a,
+body.custom-cursor-active button,
+body.custom-cursor-active .card,
+body.custom-cursor-active .chip,
+body.custom-cursor-active .cat-card,
+body.custom-cursor-active .row-item{
+  cursor: none;
+}
+body.custom-cursor-active input,
+body.custom-cursor-active textarea,
+body.custom-cursor-active [contenteditable]{
+  cursor: auto;
+}
+@media (pointer: coarse){
+  .cursor-dot, .cursor-ring{ display:none !important; }
+}
+
+/* ============ MAGNETIC HOVER (buttons) ============ */
+.btn, .icon-btn{ will-change: transform; }
