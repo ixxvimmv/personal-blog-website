@@ -109,6 +109,7 @@
         id: uid("post"),
         subtitle: "",
         coverImage: "",
+        footer: "",
         status: "published",
         featured: false,
         seoTitle: "",
