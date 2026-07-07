@@ -59,13 +59,15 @@ function openModal(html){
   document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target.id === 'modal-overlay') closeModal(); });
 }
 function closeModal(){ document.getElementById('modal-root').innerHTML = ''; }
-function confirmAction(message, onConfirm){
+function confirmAction(message, onConfirm, opts){
+  const label = (opts && opts.confirmLabel) || 'Delete';
+  const danger = !(opts && opts.soft);
   openModal(`
     <h3>Are you sure?</h3>
     <p style="font-family:var(--sans);font-size:14px;color:var(--text-muted);">${message}</p>
     <div class="modal-actions">
       <button class="btn ghost" id="confirm-cancel">Cancel</button>
-      <button class="btn danger" id="confirm-ok">Delete</button>
+      <button class="btn ${danger ? 'danger' : ''}" id="confirm-ok">${label}</button>
     </div>
   `);
   document.getElementById('confirm-cancel').addEventListener('click', closeModal);
@@ -171,13 +173,14 @@ function viewLogin(){
       <div class="login-error" id="login-error">Incorrect username or password. Try again.</div>
       <div class="field-group">
         <label class="field-label" for="login-user">Username</label>
-        <input class="field-input" type="text" id="login-user" placeholder="Enter admin username" autofocus autocomplete="username">
+        <input class="field-input" type="text" id="login-user" placeholder="Enter admin username" autocomplete="username" autofocus>
       </div>
       <div class="field-group">
         <label class="field-label" for="login-pass">Password</label>
         <input class="field-input" type="password" id="login-pass" placeholder="Enter admin password" autocomplete="current-password">
       </div>
       <button class="btn" style="width:100%;justify-content:center;" id="login-btn">Sign in</button>
+      <p class="login-hint">Demo login: <strong>admin</strong> / <strong>admin123</strong><br>Stored only in this browser's localStorage — there is no real server-side auth here.</p>
     </div>
   </div>`;
 }
@@ -186,7 +189,7 @@ function wireLogin(){
   const userInput = document.getElementById('login-user');
   const passInput = document.getElementById('login-pass');
   function tryLogin(){
-    if (CMS.login(userInput.value, passInput.value)){
+    if (CMS.login(userInput.value.trim(), passInput.value)){
       CMS.markKnownDevice();
       location.hash = '/dashboard';
     } else {
@@ -194,8 +197,7 @@ function wireLogin(){
     }
   }
   btn.addEventListener('click', tryLogin);
-  userInput.addEventListener('keydown', e => { if (e.key === 'Enter') passInput.focus(); });
-  passInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  [userInput, passInput].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); }));
 }
 
 /* ===================================================================
@@ -206,7 +208,6 @@ function viewDashboard(){
   const published = posts.filter(p => computeStatus(p) === 'published');
   const drafts = posts.filter(p => computeStatus(p) === 'draft');
   const scheduled = posts.filter(p => computeStatus(p) === 'scheduled');
-  const archived = posts.filter(p => computeStatus(p) === 'archived');
   const cats = CMS.getCategories();
   const tags = CMS.getTags();
   const recent = [...posts].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0,6);
@@ -218,7 +219,7 @@ function viewDashboard(){
     <div class="stat-card"><div class="stat-num">${published.length}</div><div class="stat-label">Published</div></div>
     <div class="stat-card"><div class="stat-num">${drafts.length}</div><div class="stat-label">Drafts</div></div>
     <div class="stat-card"><div class="stat-num">${scheduled.length}</div><div class="stat-label">Scheduled</div></div>
-    <div class="stat-card"><div class="stat-num">${archived.length}</div><div class="stat-label">Archived</div></div>
+    <div class="stat-card"><div class="stat-num">${CMS.getTotalViews().toLocaleString()}</div><div class="stat-label">Total views</div></div>
   </div>
   <div class="admin-panel">
     <h3>Recent activity</h3>
@@ -240,23 +241,25 @@ function viewDashboard(){
 /* ===================================================================
    WRITINGS LIST VIEW
 =================================================================== */
-let currentWritingsFilter = 'active'; // 'active' | 'archived'
-
+let adminWritingsFilter = 'all';
 function viewWritingsList(){
   const all = [...CMS.getAllPosts()].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-  const archivedCount = all.filter(p => computeStatus(p) === 'archived').length;
-  const posts = all.filter(p => currentWritingsFilter === 'archived'
-    ? computeStatus(p) === 'archived'
-    : computeStatus(p) !== 'archived');
-
+  const counts = {
+    all: all.length,
+    published: all.filter(p => computeStatus(p) === 'published').length,
+    draft: all.filter(p => computeStatus(p) === 'draft').length,
+    scheduled: all.filter(p => computeStatus(p) === 'scheduled').length,
+    archived: all.filter(p => computeStatus(p) === 'archived').length,
+  };
+  const posts = adminWritingsFilter === 'all' ? all : all.filter(p => computeStatus(p) === adminWritingsFilter);
+  const filters = [
+    ['all','All'], ['published','Published'], ['draft','Drafts'], ['scheduled','Scheduled'], ['archived','Archived'],
+  ];
   return `
   <div class="admin-topbar"><h1>Writings</h1><a class="btn" href="#/writings/new">+ New writing</a></div>
-
-  <div class="seg-tabs" id="writings-view-tabs">
-    <button data-view="active" class="${currentWritingsFilter==='active'?'active':''}">All writings</button>
-    <button data-view="archived" class="${currentWritingsFilter==='archived'?'active':''}">Archived (${archivedCount})</button>
+  <div class="chip-row" id="writings-status-filters" style="margin-bottom:22px;">
+    ${filters.map(([key,label]) => `<button class="chip ${adminWritingsFilter===key?'active':''}" data-status-filter="${key}">${label} (${counts[key]})</button>`).join('')}
   </div>
-
   <div class="admin-panel" style="padding:0;">
     <div class="table-wrap">
     <table class="admin-table">
@@ -272,18 +275,15 @@ function viewWritingsList(){
           <td>${CMS.getViewsForPost(p.slug).toLocaleString()}</td>
           <td>
             <div class="row-actions">
-              ${currentWritingsFilter === 'archived' ? `
-                <button class="btn-icon" data-restore="${p.id}" title="Restore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 9 9 9"/></svg></button>
-                <button class="btn-icon" data-del="${p.id}" title="Delete permanently"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-              ` : `
-                <a class="btn-icon" href="#/writings/edit/${p.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
-                <button class="btn-icon" data-dup="${p.id}" title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-                <button class="btn-icon" data-archive="${p.id}" title="Archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
-                <button class="btn-icon" data-del="${p.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-              `}
+              <a class="btn-icon" href="#/writings/edit/${p.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></a>
+              <button class="btn-icon" data-dup="${p.id}" title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              ${computeStatus(p) === 'archived'
+                ? `<button class="btn-icon" data-restore="${p.id}" title="Restore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg></button>`
+                : `<button class="btn-icon" data-archive="${p.id}" title="Archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9"/><line x1="10" y1="13" x2="14" y2="13"/></svg></button>`}
+              <button class="btn-icon" data-del="${p.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
             </div>
           </td>
-        </tr>`).join('') : `<tr><td colspan="7"><div class="admin-empty">${currentWritingsFilter === 'archived' ? 'No archived writings. Anything you archive will show up here.' : `No writings yet. <a href="#/writings/new">Create your first one</a>.`}</div></td></tr>`}
+        </tr>`).join('') : `<tr><td colspan="7"><div class="admin-empty">${adminWritingsFilter==='all' ? `No writings yet. <a href="#/writings/new">Create your first one</a>.` : `No writings with this status.`}</div></td></tr>`}
       </tbody>
     </table>
     </div>
@@ -291,50 +291,26 @@ function viewWritingsList(){
   `;
 }
 function wireWritingsList(){
-  const tabs = document.getElementById('writings-view-tabs');
-  if (tabs){
-    tabs.addEventListener('click', e => {
-      const btn = e.target.closest('button[data-view]');
-      if (!btn) return;
-      currentWritingsFilter = btn.dataset.view;
-      render();
-    });
-  }
-
   const tbody = document.getElementById('writings-tbody');
   if (!tbody) return;
+  document.getElementById('writings-status-filters').addEventListener('click', e => {
+    const chip = e.target.closest('[data-status-filter]');
+    if (chip){ adminWritingsFilter = chip.dataset.statusFilter; render(); }
+  });
   tbody.addEventListener('click', e => {
     const dup = e.target.closest('[data-dup]');
     const del = e.target.closest('[data-del]');
-    const archiveBtn = e.target.closest('[data-archive]');
-    const restoreBtn = e.target.closest('[data-restore]');
-
+    const archive = e.target.closest('[data-archive]');
+    const restore = e.target.closest('[data-restore]');
     if (dup){ CMS.duplicatePost(dup.dataset.dup); toast('Writing duplicated as a draft.'); render(); }
-
+    if (archive){ CMS.archivePost(archive.dataset.archive); toast('Writing archived.'); render(); }
+    if (restore){ CMS.restorePost(restore.dataset.restore); toast('Writing restored.'); render(); }
     if (del){
       confirmAction('This will permanently delete this writing.', () => {
         CMS.deletePost(del.dataset.del);
         toast('Writing deleted.');
         render();
       });
-    }
-
-    if (archiveBtn){
-      const post = CMS.getPostById(archiveBtn.dataset.archive);
-      if (post){
-        CMS.savePost(Object.assign({}, post, { previousStatus: post.status, status: 'archived' }));
-        toast('Writing archived. You can restore it anytime.');
-        render();
-      }
-    }
-
-    if (restoreBtn){
-      const post = CMS.getPostById(restoreBtn.dataset.restore);
-      if (post){
-        CMS.savePost(Object.assign({}, post, { status: post.previousStatus || 'draft' }));
-        toast('Writing restored.');
-        render();
-      }
     }
   });
 }
@@ -345,10 +321,41 @@ function wireWritingsList(){
 function editorToolbarHtml(){
   const btn = (cmd, label, svg, arg) => `<button type="button" data-cmd="${cmd}" data-arg="${arg||''}" title="${label}">${svg}</button>`;
   return `<div class="editor-toolbar">
-    ${btn('formatBlock','Heading','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M18 4v16M6 12h12"/></svg>','H2')}
+    <select class="editor-select" id="ed-block-format" title="Text style">
+      <option value="P">Normal text</option>
+      <option value="H1">Title</option>
+      <option value="H2">Heading</option>
+      <option value="H3">Subheading</option>
+    </select>
+    <select class="editor-select" id="ed-font" title="Font">
+      <option value="">Default</option>
+      <option value="Lora, serif" style="font-family:Lora,serif;">Lora (body serif)</option>
+      <option value="Fraunces, serif" style="font-family:Fraunces,serif;">Fraunces (display)</option>
+      <option value="Inter, sans-serif" style="font-family:Inter,sans-serif;">Inter (sans)</option>
+      <option value="Georgia, serif" style="font-family:Georgia,serif;">Georgia</option>
+      <option value="'Courier New', monospace" style="font-family:'Courier New',monospace;">Courier (monospace)</option>
+    </select>
+    <div class="sep"></div>
     ${btn('bold','Bold','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h8a4 4 0 0 1 0 8H6zM6 12h9a4 4 0 0 1 0 8H6z"/></svg>')}
     ${btn('italic','Italic','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>')}
     ${btn('underline','Underline','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3v7a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>')}
+    <div class="sep"></div>
+    <label class="editor-color-swatch" title="Text color">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="m6 16 6-13 6 13"/><path d="M8 12h8"/></svg>
+      <input type="color" id="ed-text-color" value="#2B2A28">
+    </label>
+    <label class="editor-color-swatch" title="Highlight color">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 6-6 5 5-6 6z"/><path d="m3 21 4-4"/><path d="m11 13-6 6H2v-3l6-6"/></svg>
+      <input type="color" id="ed-highlight-color" value="#f5e6c8">
+    </label>
+    <button type="button" id="ed-clear-color" title="Clear text/highlight color"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="20" y2="20"/><path d="M4 20h16"/><path d="m6 16 6-13 6 13"/></svg></button>
+    <div class="sep"></div>
+    ${btn('justifyLeft','Align left','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>')}
+    ${btn('justifyCenter','Align center','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>')}
+    ${btn('justifyRight','Align right','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>')}
+    ${btn('justifyFull','Justify','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>')}
+    ${btn('outdent','Decrease indent','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 8 3 12 7 16"/><line x1="21" y1="6" x2="11" y2="6"/><line x1="21" y1="12" x2="11" y2="12"/><line x1="21" y1="18" x2="11" y2="18"/></svg>')}
+    ${btn('indent','Increase indent','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 8 7 12 3 16"/><line x1="21" y1="6" x2="11" y2="6"/><line x1="21" y1="12" x2="11" y2="12"/><line x1="21" y1="18" x2="11" y2="18"/></svg>')}
     <div class="sep"></div>
     ${btn('insertUnorderedList','Bullet list','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>')}
     ${btn('insertOrderedList','Numbered list','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>')}
@@ -362,6 +369,8 @@ function editorToolbarHtml(){
 }
 function wireEditor(surfaceId, toolbarEl){
   const surface = document.getElementById(surfaceId);
+  document.execCommand('styleWithCSS', false, true);
+
   toolbarEl.querySelectorAll('button[data-cmd]').forEach(btn => {
     btn.addEventListener('mousedown', e => e.preventDefault()); // keep focus/selection in editor
     btn.addEventListener('click', () => {
@@ -382,6 +391,51 @@ function wireEditor(surfaceId, toolbarEl){
       document.execCommand(cmd, false, btn.dataset.arg || undefined);
     });
   });
+
+  const blockSelect = toolbarEl.querySelector('#ed-block-format');
+  if (blockSelect){
+    blockSelect.addEventListener('mousedown', () => surface.focus());
+    blockSelect.addEventListener('change', () => {
+      surface.focus();
+      document.execCommand('formatBlock', false, blockSelect.value);
+      blockSelect.blur();
+    });
+  }
+
+  const fontSelect = toolbarEl.querySelector('#ed-font');
+  if (fontSelect){
+    fontSelect.addEventListener('mousedown', () => surface.focus());
+    fontSelect.addEventListener('change', () => {
+      surface.focus();
+      if (fontSelect.value) document.execCommand('fontName', false, fontSelect.value);
+      fontSelect.blur();
+    });
+  }
+
+  const textColor = toolbarEl.querySelector('#ed-text-color');
+  if (textColor){
+    textColor.addEventListener('mousedown', e => e.stopPropagation());
+    textColor.addEventListener('input', () => {
+      surface.focus();
+      document.execCommand('foreColor', false, textColor.value);
+    });
+  }
+  const highlightColor = toolbarEl.querySelector('#ed-highlight-color');
+  if (highlightColor){
+    highlightColor.addEventListener('mousedown', e => e.stopPropagation());
+    highlightColor.addEventListener('input', () => {
+      surface.focus();
+      document.execCommand('hiliteColor', false, highlightColor.value);
+    });
+  }
+  const clearColorBtn = toolbarEl.querySelector('#ed-clear-color');
+  if (clearColorBtn){
+    clearColorBtn.addEventListener('mousedown', e => e.preventDefault());
+    clearColorBtn.addEventListener('click', () => {
+      surface.focus();
+      document.execCommand('removeFormat', false, undefined);
+    });
+  }
 }
 
 /* ===================================================================
@@ -431,40 +485,38 @@ function viewWritingEditor(params){
   const cats = CMS.getCategories();
   const tags = CMS.getTags();
   const p = post || { title:'', subtitle:'', content:'', category: cats[0]?.slug || '', tags:[], coverImage:'', status:'draft', featured:false, seoTitle:'', metaDescription:'', slug:'', publishDate:'' };
-  const isArchived = isEdit && computeStatus(post) === 'archived';
+
+  const isArchived = isEdit && computeStatus(p) === 'archived';
 
   return `
   <div class="admin-topbar">
     <h1>${isEdit ? 'Edit writing' : 'New writing'}</h1>
-    <div style="display:flex;gap:10px;">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <a class="btn ghost" href="#/writings">Cancel</a>
-      ${isEdit ? `<button class="btn ghost" id="archive-toggle-btn">${isArchived ? 'Restore' : 'Archive'}</button>` : ''}
-      ${!isArchived ? `
-        <button class="btn ghost" id="save-draft-btn">Save draft</button>
-        <button class="btn" id="publish-btn">${p.status==='published' && new Date(p.publishDate) <= new Date() ? 'Update' : 'Publish'}</button>
-      ` : ''}
+      ${isEdit ? (isArchived
+        ? `<button class="btn ghost" id="restore-btn">Restore</button>`
+        : `<button class="btn ghost" id="archive-btn">Archive</button>`) : ''}
+      <button class="btn ghost" id="save-draft-btn">Save draft</button>
+      <button class="btn" id="publish-btn">${p.status==='published' && new Date(p.publishDate) <= new Date() ? 'Update' : 'Publish'}</button>
     </div>
   </div>
-
-  ${isArchived ? `<div class="admin-panel" style="border-color:var(--line-strong);background:var(--bg-soft);">
-    <p style="font-family:var(--sans);font-size:14px;color:var(--text-muted);margin:0;">This writing is archived and hidden from the live site. Restore it to edit or publish it again.</p>
-  </div>` : ''}
+  ${isArchived ? `<div class="field-hint" style="background:var(--bg-soft);border:1px solid var(--line);padding:12px 16px;border-radius:var(--radius);margin-bottom:24px;">This writing is archived and hidden from the public site. Restore it to bring it back to its previous status, or use Save draft / Publish to bring it back directly.</div>` : ''}
 
   <div class="admin-form-grid">
     <div>
       <div class="admin-panel">
         <div class="field-group">
           <label class="field-label" for="f-title">Title</label>
-          <input class="field-input" id="f-title" value="${escapeHtml(p.title)}" placeholder="A working title" ${isArchived?'disabled':''}>
+          <input class="field-input" id="f-title" value="${escapeHtml(p.title)}" placeholder="A working title">
         </div>
         <div class="field-group">
           <label class="field-label" for="f-subtitle">Subtitle <span style="font-weight:400;color:var(--text-faint);">(optional)</span></label>
-          <input class="field-input" id="f-subtitle" value="${escapeHtml(p.subtitle)}" placeholder="A short subtitle" ${isArchived?'disabled':''}>
+          <input class="field-input" id="f-subtitle" value="${escapeHtml(p.subtitle)}" placeholder="A short subtitle">
         </div>
         <div class="field-group">
           <label class="field-label">Content</label>
           ${editorToolbarHtml()}
-          <div class="editor-surface" id="f-content" contenteditable="${isArchived ? 'false' : 'true'}" data-placeholder="Start writing…">${p.content || ''}</div>
+          <div class="editor-surface" id="f-content" contenteditable="true" data-placeholder="Start writing…">${p.content || ''}</div>
         </div>
       </div>
 
@@ -472,16 +524,16 @@ function viewWritingEditor(params){
         <h3>SEO &amp; metadata</h3>
         <div class="field-group">
           <label class="field-label" for="f-slug">URL slug</label>
-          <input class="field-input" id="f-slug" value="${escapeHtml(p.slug)}" placeholder="auto-generated-from-title" ${isArchived?'disabled':''}>
+          <input class="field-input" id="f-slug" value="${escapeHtml(p.slug)}" placeholder="auto-generated-from-title">
           <p class="field-hint">Leave blank to auto-generate from the title.</p>
         </div>
         <div class="field-group">
           <label class="field-label" for="f-seo-title">SEO title</label>
-          <input class="field-input" id="f-seo-title" value="${escapeHtml(p.seoTitle)}" placeholder="Defaults to the writing's title" ${isArchived?'disabled':''}>
+          <input class="field-input" id="f-seo-title" value="${escapeHtml(p.seoTitle)}" placeholder="Defaults to the writing's title">
         </div>
         <div class="field-group">
           <label class="field-label" for="f-meta-desc">Meta description</label>
-          <textarea class="field-textarea" id="f-meta-desc" placeholder="A one or two sentence summary for search engines" ${isArchived?'disabled':''}>${escapeHtml(p.metaDescription)}</textarea>
+          <textarea class="field-textarea" id="f-meta-desc" placeholder="A one or two sentence summary for search engines">${escapeHtml(p.metaDescription)}</textarea>
         </div>
       </div>
     </div>
@@ -494,26 +546,26 @@ function viewWritingEditor(params){
           <div class="cover-picker">
             ${p.coverImage ? `<img class="cover-preview" id="cover-preview" src="${p.coverImage}">` : `<div class="cover-preview-empty" id="cover-preview-empty">No cover image</div>`}
             <input type="hidden" id="f-cover" value="${escapeHtml(p.coverImage)}">
-            <button type="button" class="btn ghost small" id="choose-cover-btn" style="width:100%;justify-content:center;" ${isArchived?'disabled':''}>Choose image</button>
+            <button type="button" class="btn ghost small" id="choose-cover-btn" style="width:100%;justify-content:center;">Choose image</button>
           </div>
         </div>
         <div class="field-group">
           <label class="field-label" for="f-category">Category</label>
-          <select class="field-select" id="f-category" ${isArchived?'disabled':''}>${cats.map(c => `<option value="${c.slug}" ${p.category===c.slug?'selected':''}>${c.name}</option>`).join('')}</select>
+          <select class="field-select" id="f-category">${cats.map(c => `<option value="${c.slug}" ${p.category===c.slug?'selected':''}>${c.name}</option>`).join('')}</select>
         </div>
         <div class="field-group">
           <label class="field-label">Tags</label>
           <div class="tag-picker" id="tag-picker">
-            ${tags.map(t => `<button type="button" class="tag-pick ${p.tags.includes(t.slug)?'selected':''}" data-tag="${t.slug}" ${isArchived?'disabled':''}>#${t.name}</button>`).join('') || '<span class="field-hint">No tags yet — add some in Tag Management.</span>'}
+            ${tags.map(t => `<button type="button" class="tag-pick ${p.tags.includes(t.slug)?'selected':''}" data-tag="${t.slug}">#${t.name}</button>`).join('') || '<span class="field-hint">No tags yet — add some in Tag Management.</span>'}
           </div>
         </div>
         <div class="field-group">
           <label class="field-label" for="f-pubdate">Publish date &amp; time</label>
-          <input class="field-input" type="datetime-local" id="f-pubdate" value="${fmtDateTimeInput(p.publishDate) || fmtDateTimeInput(new Date().toISOString())}" ${isArchived?'disabled':''}>
+          <input class="field-input" type="datetime-local" id="f-pubdate" value="${fmtDateTimeInput(p.publishDate) || fmtDateTimeInput(new Date().toISOString())}">
           <p class="field-hint">Set this in the future and publish to schedule the post.</p>
         </div>
         <div class="field-group checkbox-row">
-          <input type="checkbox" id="f-featured" ${p.featured ? 'checked' : ''} ${isArchived?'disabled':''}>
+          <input type="checkbox" id="f-featured" ${p.featured ? 'checked' : ''}>
           <label for="f-featured">Feature this writing on the homepage</label>
         </div>
         ${isEdit ? `<p class="field-hint">Created ${fmtDate(p.createdAt)} · Last updated ${fmtDate(p.updatedAt)}</p>` : ''}
@@ -525,27 +577,28 @@ function viewWritingEditor(params){
 function wireWritingEditor(params){
   const contentSurface = document.getElementById('f-content');
   if (!contentSurface) return;
+  wireEditor('f-content', document.querySelector('.editor-toolbar'));
 
-  const archiveToggleBtn = document.getElementById('archive-toggle-btn');
-  if (archiveToggleBtn){
-    archiveToggleBtn.addEventListener('click', () => {
-      const existing = CMS.getPostById(params.id);
-      if (!existing) return;
-      if (computeStatus(existing) === 'archived'){
-        CMS.savePost(Object.assign({}, existing, { status: existing.previousStatus || 'draft' }));
-        toast('Writing restored.');
-      } else {
-        CMS.savePost(Object.assign({}, existing, { previousStatus: existing.status, status: 'archived' }));
-        toast('Writing archived. You can restore it anytime.');
-      }
-      location.hash = '/writings';
+  const archiveBtn = document.getElementById('archive-btn');
+  if (archiveBtn){
+    archiveBtn.addEventListener('click', () => {
+      confirmAction('Archive this writing? It will be hidden from the public site but not deleted — you can restore it any time.', () => {
+        CMS.archivePost(params.id);
+        toast('Writing archived.');
+        location.hash = '/writings/edit/' + params.id;
+        render();
+      }, { confirmLabel: 'Archive', soft: true });
     });
   }
-
-  // Archived writings are read-only in the editor — skip wiring the editing controls.
-  if (contentSurface.getAttribute('contenteditable') === 'false') return;
-
-  wireEditor('f-content', document.querySelector('.editor-toolbar'));
+  const restoreBtn = document.getElementById('restore-btn');
+  if (restoreBtn){
+    restoreBtn.addEventListener('click', () => {
+      CMS.restorePost(params.id);
+      toast('Writing restored.');
+      location.hash = '/writings/edit/' + params.id;
+      render();
+    });
+  }
 
   document.querySelectorAll('#tag-picker .tag-pick').forEach(btn => {
     btn.addEventListener('click', () => btn.classList.toggle('selected'));
@@ -584,26 +637,20 @@ function wireWritingEditor(params){
     };
   }
 
-  const saveDraftBtn = document.getElementById('save-draft-btn');
-  if (saveDraftBtn){
-    saveDraftBtn.addEventListener('click', () => {
-      const record = CMS.savePost(collect('draft'));
-      toast('Draft saved.');
-      location.hash = '/writings/edit/' + record.id;
-      render();
-    });
-  }
-  const publishBtn = document.getElementById('publish-btn');
-  if (publishBtn){
-    publishBtn.addEventListener('click', () => {
-      const data = collect('published');
-      const future = new Date(data.publishDate) > new Date();
-      const record = CMS.savePost(data);
-      toast(future ? 'Writing scheduled.' : 'Writing published.');
-      location.hash = '/writings/edit/' + record.id;
-      render();
-    });
-  }
+  document.getElementById('save-draft-btn').addEventListener('click', () => {
+    const record = CMS.savePost(collect('draft'));
+    toast('Draft saved.');
+    location.hash = '/writings/edit/' + record.id;
+    render();
+  });
+  document.getElementById('publish-btn').addEventListener('click', () => {
+    const data = collect('published');
+    const future = new Date(data.publishDate) > new Date();
+    const record = CMS.savePost(data);
+    toast(future ? 'Writing scheduled.' : 'Writing published.');
+    location.hash = '/writings/edit/' + record.id;
+    render();
+  });
 }
 
 /* ===================================================================
@@ -901,29 +948,8 @@ function wireAnalyticsAdmin(){
 =================================================================== */
 function viewSettingsAdmin(){
   const settings = CMS.getSettings();
-  const currentUsername = CMS.getUsername();
   return `
   <div class="admin-topbar"><h1>Settings</h1></div>
-
-  <div class="admin-panel" style="max-width:520px;">
-    <h3>Login &amp; security</h3>
-    <p class="field-hint" style="margin-bottom:16px;">This is the username and password used to sign in to this dashboard. Changing either takes effect immediately — you'll use the new one next time you log in.</p>
-    <div id="creds-success" class="form-success" style="margin-top:0;margin-bottom:18px;">Login details updated.</div>
-    <div class="field-group">
-      <label class="field-label" for="f-username">Username</label>
-      <input class="field-input" id="f-username" value="${escapeHtml(currentUsername)}" autocomplete="username">
-    </div>
-    <div class="field-group">
-      <label class="field-label" for="f-new-password">New password <span style="font-weight:400;color:var(--text-faint);">(leave blank to keep current password)</span></label>
-      <input class="field-input" type="password" id="f-new-password" placeholder="••••••••" autocomplete="new-password">
-    </div>
-    <div class="field-group">
-      <label class="field-label" for="f-confirm-password">Confirm new password</label>
-      <input class="field-input" type="password" id="f-confirm-password" placeholder="••••••••" autocomplete="new-password">
-    </div>
-    <button class="btn" id="save-creds-btn">Save login details</button>
-  </div>
-
   <div class="admin-panel" style="max-width:520px;">
     <h3>About page photo</h3>
     <p class="field-hint" style="margin-bottom:16px;">Shown at the top of your public About page. Leave empty to use the default monogram instead.</p>
@@ -938,32 +964,23 @@ function viewSettingsAdmin(){
       </div>
     </div>
   </div>
+
+  <div class="admin-panel" style="max-width:520px;">
+    <h3>Account credentials</h3>
+    <p class="field-hint" style="margin-bottom:16px;">Change the username and password used to sign in to this dashboard. You'll need to log in again with the new credentials next time.</p>
+    <div class="field-group">
+      <label class="field-label" for="f-username">Username</label>
+      <input class="field-input" id="f-username" value="${escapeHtml(CMS.getUsername())}">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="f-new-password">New password</label>
+      <input class="field-input" type="password" id="f-new-password" placeholder="Leave blank to keep current password">
+    </div>
+    <button class="btn" id="save-credentials-btn">Save credentials</button>
+  </div>
   `;
 }
 function wireSettingsAdmin(){
-  const saveCredsBtn = document.getElementById('save-creds-btn');
-  if (saveCredsBtn){
-    saveCredsBtn.addEventListener('click', () => {
-      const username = document.getElementById('f-username').value.trim();
-      const newPass = document.getElementById('f-new-password').value;
-      const confirmPass = document.getElementById('f-confirm-password').value;
-
-      if (!username){ toast('Username cannot be empty.'); return; }
-      if (newPass || confirmPass){
-        if (newPass.length < 4){ toast('New password should be at least 4 characters.'); return; }
-        if (newPass !== confirmPass){ toast('New password and confirmation don\u2019t match.'); return; }
-      }
-
-      CMS.changeCredentials(username, newPass || undefined);
-      document.getElementById('f-new-password').value = '';
-      document.getElementById('f-confirm-password').value = '';
-      const successEl = document.getElementById('creds-success');
-      successEl.classList.add('show');
-      setTimeout(() => successEl.classList.remove('show'), 3000);
-      toast('Login details updated.');
-    });
-  }
-
   const chooseBtn = document.getElementById('choose-about-photo-btn');
   if (!chooseBtn) return;
   chooseBtn.addEventListener('click', () => {
@@ -981,6 +998,15 @@ function wireSettingsAdmin(){
       render();
     });
   }
+  document.getElementById('save-credentials-btn').addEventListener('click', () => {
+    const newUser = document.getElementById('f-username').value.trim();
+    const newPass = document.getElementById('f-new-password').value;
+    if (!newUser){ toast('Username cannot be empty.'); return; }
+    CMS.changeUsername(newUser);
+    if (newPass) CMS.changePassword(newPass);
+    toast('Credentials updated.');
+    render();
+  });
 }
 
 /* ===================================================================
