@@ -318,16 +318,16 @@ function wireWritingsList(){
 /* ===================================================================
    RICH TEXT EDITOR
 =================================================================== */
-function editorToolbarHtml(){
+function editorToolbarHtml(forId){
   const btn = (cmd, label, svg, arg) => `<button type="button" data-cmd="${cmd}" data-arg="${arg||''}" title="${label}">${svg}</button>`;
-  return `<div class="editor-toolbar">
-    <select class="editor-select" id="ed-block-format" title="Text style">
+  return `<div class="editor-toolbar" data-for="${forId || 'f-content'}">
+    <select class="editor-select" id="ed-block-format-${forId}" title="Text style">
       <option value="P">Normal text</option>
       <option value="H1">Title</option>
       <option value="H2">Heading</option>
       <option value="H3">Subheading</option>
     </select>
-    <select class="editor-select" id="ed-font" title="Font">
+    <select class="editor-select" id="ed-font-${forId}" title="Font">
       <option value="">Default</option>
       <option value="Lora, serif" style="font-family:Lora,serif;">Lora (body serif)</option>
       <option value="Fraunces, serif" style="font-family:Fraunces,serif;">Fraunces (display)</option>
@@ -342,13 +342,13 @@ function editorToolbarHtml(){
     <div class="sep"></div>
     <label class="editor-color-swatch" title="Text color">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="m6 16 6-13 6 13"/><path d="M8 12h8"/></svg>
-      <input type="color" id="ed-text-color" value="#2B2A28">
+      <input type="color" class="ed-text-color" value="#2B2A28">
     </label>
     <label class="editor-color-swatch" title="Highlight color">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 6-6 5 5-6 6z"/><path d="m3 21 4-4"/><path d="m11 13-6 6H2v-3l6-6"/></svg>
-      <input type="color" id="ed-highlight-color" value="#f5e6c8">
+      <input type="color" class="ed-highlight-color" value="#f5e6c8">
     </label>
-    <button type="button" id="ed-clear-color" title="Clear text/highlight color"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="20" y2="20"/><path d="M4 20h16"/><path d="m6 16 6-13 6 13"/></svg></button>
+    <button type="button" class="ed-clear-color" title="Clear text/highlight color"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="4" x2="20" y2="20"/><path d="M4 20h16"/><path d="m6 16 6-13 6 13"/></svg></button>
     <div class="sep"></div>
     ${btn('justifyLeft','Align left','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>')}
     ${btn('justifyCenter','Align center','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>')}
@@ -392,7 +392,7 @@ function wireEditor(surfaceId, toolbarEl){
     });
   });
 
-  const blockSelect = toolbarEl.querySelector('#ed-block-format');
+  const blockSelect = toolbarEl.querySelector('select[id^="ed-block-format"]');
   if (blockSelect){
     blockSelect.addEventListener('mousedown', () => surface.focus());
     blockSelect.addEventListener('change', () => {
@@ -402,7 +402,7 @@ function wireEditor(surfaceId, toolbarEl){
     });
   }
 
-  const fontSelect = toolbarEl.querySelector('#ed-font');
+  const fontSelect = toolbarEl.querySelector('select[id^="ed-font"]');
   if (fontSelect){
     fontSelect.addEventListener('mousedown', () => surface.focus());
     fontSelect.addEventListener('change', () => {
@@ -412,7 +412,7 @@ function wireEditor(surfaceId, toolbarEl){
     });
   }
 
-  const textColor = toolbarEl.querySelector('#ed-text-color');
+  const textColor = toolbarEl.querySelector('.ed-text-color');
   if (textColor){
     textColor.addEventListener('mousedown', e => e.stopPropagation());
     textColor.addEventListener('input', () => {
@@ -420,7 +420,7 @@ function wireEditor(surfaceId, toolbarEl){
       document.execCommand('foreColor', false, textColor.value);
     });
   }
-  const highlightColor = toolbarEl.querySelector('#ed-highlight-color');
+  const highlightColor = toolbarEl.querySelector('.ed-highlight-color');
   if (highlightColor){
     highlightColor.addEventListener('mousedown', e => e.stopPropagation());
     highlightColor.addEventListener('input', () => {
@@ -428,7 +428,7 @@ function wireEditor(surfaceId, toolbarEl){
       document.execCommand('hiliteColor', false, highlightColor.value);
     });
   }
-  const clearColorBtn = toolbarEl.querySelector('#ed-clear-color');
+  const clearColorBtn = toolbarEl.querySelector('.ed-clear-color');
   if (clearColorBtn){
     clearColorBtn.addEventListener('mousedown', e => e.preventDefault());
     clearColorBtn.addEventListener('click', () => {
@@ -484,7 +484,7 @@ function viewWritingEditor(params){
   if (isEdit && !post) return `<div class="admin-empty">Writing not found. <a href="#/writings">Back to writings</a></div>`;
   const cats = CMS.getCategories();
   const tags = CMS.getTags();
-  const p = post || { title:'', subtitle:'', content:'', category: cats[0]?.slug || '', tags:[], coverImage:'', status:'draft', featured:false, seoTitle:'', metaDescription:'', slug:'', publishDate:'' };
+  const p = post || { title:'', subtitle:'', content:'', footer:'', category: cats[0]?.slug || '', tags:[], coverImage:'', status:'draft', featured:false, seoTitle:'', metaDescription:'', slug:'', publishDate:'' };
 
   const isArchived = isEdit && computeStatus(p) === 'archived';
 
@@ -515,9 +515,16 @@ function viewWritingEditor(params){
         </div>
         <div class="field-group">
           <label class="field-label">Content</label>
-          ${editorToolbarHtml()}
+          ${editorToolbarHtml('f-content')}
           <div class="editor-surface" id="f-content" contenteditable="true" data-placeholder="Start writing…">${p.content || ''}</div>
         </div>
+      </div>
+
+      <div class="admin-panel">
+        <h3>Writing footer <span style="font-weight:400;color:var(--text-faint);">(optional)</span></h3>
+        <p class="field-hint" style="margin-bottom:14px;">Shown at the end of this piece on the public site, below the writing itself. Leave empty for no footer. Set per writing — nothing here is shared across posts.</p>
+        ${editorToolbarHtml('f-footer')}
+        <div class="editor-surface" id="f-footer" contenteditable="true" data-placeholder="e.g. Thank you for reading…" style="min-height:100px;">${p.footer || ''}</div>
       </div>
 
       <div class="admin-panel">
@@ -577,7 +584,8 @@ function viewWritingEditor(params){
 function wireWritingEditor(params){
   const contentSurface = document.getElementById('f-content');
   if (!contentSurface) return;
-  wireEditor('f-content', document.querySelector('.editor-toolbar'));
+  wireEditor('f-content', document.querySelector('.editor-toolbar[data-for="f-content"]'));
+  wireEditor('f-footer', document.querySelector('.editor-toolbar[data-for="f-footer"]'));
 
   const archiveBtn = document.getElementById('archive-btn');
   if (archiveBtn){
@@ -624,6 +632,7 @@ function wireWritingEditor(params){
       title: document.getElementById('f-title').value.trim() || 'Untitled',
       subtitle: document.getElementById('f-subtitle').value.trim(),
       content: document.getElementById('f-content').innerHTML,
+      footer: document.getElementById('f-footer').innerHTML,
       slug: document.getElementById('f-slug').value.trim(),
       seoTitle: document.getElementById('f-seo-title').value.trim(),
       metaDescription: document.getElementById('f-meta-desc').value.trim(),
