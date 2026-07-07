@@ -472,7 +472,7 @@
       return sessionStorage.getItem(SESSION_KEY) === "1";
     },
     getUsername() {
-      return localStorage.getItem(LS.authUser) || "admin";
+      return localStorage.getItem(LS.authUser) || "ixxvimmv";
     },
     changeUsername(newUser) {
       localStorage.setItem(LS.authUser, newUser);
