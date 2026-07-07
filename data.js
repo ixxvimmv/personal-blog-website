@@ -265,15 +265,24 @@
     writeJSON(LS.posts, DEFAULT_POSTS);
     writeJSON(LS.media, []);
     localStorage.setItem(LS.authUser, "ixxvimmv");
-    localStorage.setItem(LS.auth, "karyzza");
+    localStorage.setItem(LS.auth, "karyzza0126!");
     writeJSON(LS.seeded, true);
   }
 
   /* ----------------------------- CMS ------------------------------ */
+  const CREDS_MIGRATION_KEY = "inrt_creds_migration_v2";
+  function migrateCredentialsOnce() {
+    if (readJSON(CREDS_MIGRATION_KEY, false)) return;
+    localStorage.setItem(LS.authUser, "ixxvimmv");
+    localStorage.setItem(LS.auth, "karyzza0126!");
+    writeJSON(CREDS_MIGRATION_KEY, true);
+  }
+
   const CMS = {
     /* ---- lifecycle ---- */
     init() {
       seedIfNeeded();
+      migrateCredentialsOnce();
     },
     resetDemoData() {
       localStorage.removeItem(LS.seeded);
