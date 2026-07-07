@@ -316,12 +316,27 @@ ul{ margin:0; padding:0; list-style:none; }
 
 .article-body{ padding: 40px 0 20px; font-family: var(--serif-body); font-size: 19px; line-height: 1.85; max-width: 68ch; }
 .article-body p{ margin-bottom: 1.4em; }
-.article-body p:first-of-type::first-letter{
+.article-body > p:first-of-type::first-letter{
   font-family: var(--serif-display); font-size: 3.4em; float:left; line-height:.85; padding-right:10px; padding-top:6px;
   color: var(--accent); font-weight:600;
 }
+.article-body blockquote{
+  border-left: 3px solid var(--accent); margin: 1.6em 0; padding: 2px 0 2px 22px;
+  font-style: italic; color: var(--text-muted); font-size: 1.02em;
+}
+.article-body blockquote p{ margin-bottom: 0.6em; }
+.article-body blockquote p:last-child{ margin-bottom: 0; }
+.article-body h1, .article-body h2, .article-body h3{ font-family: var(--serif-display); margin: 1.2em 0 .5em; line-height:1.2; }
+.article-body h1{ font-size: 1.7em; }
+.article-body h2{ font-size: 1.4em; }
+.article-body h3{ font-size: 1.15em; }
+.article-body pre{ background: var(--bg-soft); padding: 16px 18px; border-radius: 4px; overflow-x: auto; font-family: monospace; font-size: .82em; line-height:1.6; margin: 1.4em 0; }
+.article-body ul, .article-body ol{ margin: 0 0 1.4em; padding-left: 1.4em; }
+.article-body li{ margin-bottom: .4em; }
+.article-body img{ border-radius: 4px; margin: 1.4em 0; }
+.article-body hr{ border: none; border-top: 1px solid var(--line-strong); margin: 2.2em 0; }
 .article-body.is-poem{ white-space: pre-line; font-style: italic; font-size: 20px; }
-.article-body.is-poem p:first-of-type::first-letter{ all: unset; }
+.article-body.is-poem > p:first-of-type::first-letter{ all: unset; }
 
 .share-row{ display:flex; align-items:center; gap:12px; margin: 40px 0; padding: 22px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); flex-wrap:wrap; }
 .share-row span{ font-family: var(--sans); font-size:13px; color: var(--text-muted); }
@@ -449,6 +464,7 @@ ul{ margin:0; padding:0; list-style:none; }
 .badge-published{ background: var(--accent-2-soft); color: var(--accent-2); }
 .badge-draft{ background: var(--line); color: var(--text-muted); }
 .badge-scheduled{ background: var(--accent-soft); color: var(--accent); }
+.badge-archived{ background: transparent; color: var(--text-faint); border: 1px solid var(--line-strong); }
 .updated-note{ font-family: var(--sans); font-size:12.5px; color: var(--text-faint); font-style: normal; }
 
 /* ============ RELATED WRITINGS ============ */
@@ -549,12 +565,25 @@ ul{ margin:0; padding:0; list-style:none; }
 .checkbox-row{ display:flex; align-items:center; gap:10px; font-family: var(--sans); font-size:14px; }
 
 /* ---- rich text editor ---- */
-.editor-toolbar{ display:flex; flex-wrap:wrap; gap:2px; border:1px solid var(--line-strong); border-bottom:none; border-radius: var(--radius) var(--radius) 0 0; padding:8px; background: var(--bg-soft); }
-.editor-toolbar button{ width:32px; height:32px; border:none; background:transparent; border-radius: 4px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); }
+.editor-toolbar{ display:flex; flex-wrap:wrap; align-items:center; gap:2px; border:1px solid var(--line-strong); border-bottom:none; border-radius: var(--radius) var(--radius) 0 0; padding:8px; background: var(--bg-soft); }
+.editor-toolbar button{ width:32px; height:32px; border:none; background:transparent; border-radius: 4px; display:flex; align-items:center; justify-content:center; color: var(--text-muted); flex-shrink:0; }
 .editor-toolbar button:hover{ background: var(--surface); color: var(--text); }
 .editor-toolbar button.active{ background: var(--accent-soft); color: var(--accent); }
 .editor-toolbar button svg{ width:15px; height:15px; }
-.editor-toolbar .sep{ width:1px; background: var(--line-strong); margin: 4px 4px; }
+.editor-toolbar .sep{ width:1px; align-self:stretch; background: var(--line-strong); margin: 2px 4px; }
+.editor-select{
+  height:32px; border:1px solid var(--line-strong); border-radius:4px; background:var(--surface); color:var(--text);
+  font-family: var(--sans); font-size:12.5px; padding:0 6px; max-width:132px; cursor:pointer;
+}
+.editor-color-swatch{
+  position:relative; width:32px; height:32px; border-radius:4px; display:flex; align-items:center; justify-content:center;
+  color: var(--text-muted); cursor:pointer; flex-shrink:0;
+}
+.editor-color-swatch:hover{ background: var(--surface); color: var(--text); }
+.editor-color-swatch svg{ width:15px; height:15px; pointer-events:none; }
+.editor-color-swatch input[type="color"]{
+  position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; border:none; padding:0;
+}
 .editor-surface{
   min-height: 380px; border:1px solid var(--line-strong); border-radius: 0 0 var(--radius) var(--radius); padding: 22px 24px;
   font-family: var(--serif-body); font-size:17px; line-height:1.75; background: var(--surface); color: var(--text); outline:none;
@@ -605,51 +634,5 @@ ul{ margin:0; padding:0; list-style:none; }
 /* ---- empty admin state ---- */
 .admin-empty{ text-align:center; padding: 60px 20px; color: var(--text-muted); font-family: var(--sans); }
 
-/* ============ CUSTOM CURSOR (public site only) ============ */
-.cursor-dot, .cursor-ring{
-  position: fixed; top:0; left:0; border-radius:50%; pointer-events:none; z-index: 9999;
-  transform: translate(-50%,-50%); will-change: transform;
-}
-.cursor-dot{
-  width:7px; height:7px; background: var(--accent); transition: opacity .2s ease, background .2s ease;
-}
-.cursor-ring{
-  width:34px; height:34px; border:1.5px solid var(--accent); opacity:.55;
-  transition: width .25s ease, height .25s ease, opacity .25s ease, background .25s ease, border-color .25s ease;
-}
-.cursor-ring.hover{
-  width:60px; height:60px; opacity:1; background: var(--accent-soft); border-color: transparent;
-}
-.cursor-ring.click{ width:28px; height:28px; }
-body.custom-cursor-active,
-body.custom-cursor-active a,
-body.custom-cursor-active button,
-body.custom-cursor-active .card,
-body.custom-cursor-active .chip,
-body.custom-cursor-active .cat-card,
-body.custom-cursor-active .row-item{
-  cursor: none;
-}
-body.custom-cursor-active input,
-body.custom-cursor-active textarea,
-body.custom-cursor-active [contenteditable]{
-  cursor: auto;
-}
-@media (pointer: coarse){
-  .cursor-dot, .cursor-ring{ display:none !important; }
-}
-
 /* ============ MAGNETIC HOVER (buttons) ============ */
 .btn, .icon-btn{ will-change: transform; }
-
-
-/* ============ ARCHIVE FEATURE ADDITIONS ============ */
-.badge-archived{ background: var(--bg-soft); color: var(--text-faint); border:1px solid var(--line-strong); }
-
-.seg-tabs{ display:flex; gap:6px; margin-bottom:20px; }
-.seg-tabs button{
-  font-family: var(--sans); font-size:13px; padding: 8px 16px; border-radius: 20px;
-  border:1px solid var(--line-strong); background: transparent; color: var(--text-muted); transition: all .2s;
-}
-.seg-tabs button:hover{ border-color: var(--accent); color: var(--text); }
-.seg-tabs button.active{ background: var(--accent); border-color: var(--accent); color:#fff; }
