@@ -263,8 +263,8 @@
     writeJSON(LS.tags, DEFAULT_TAGS);
     writeJSON(LS.posts, DEFAULT_POSTS);
     writeJSON(LS.media, []);
-    localStorage.setItem(LS.auth, "admin123");
     localStorage.setItem(LS.authUser, "admin");
+    localStorage.setItem(LS.auth, "admin123");
     writeJSON(LS.seeded, true);
   }
 
@@ -337,6 +337,33 @@
       posts.unshift(copy);
       writeJSON(LS.posts, posts);
       return copy;
+    },
+
+    archivePost(id) {
+      const posts = this.getAllPosts();
+      const idx = posts.findIndex((p) => p.id === id);
+      if (idx < 0) return null;
+      if (posts[idx].status !== "archived") {
+        posts[idx] = Object.assign({}, posts[idx], {
+          previousStatus: posts[idx].status,
+          status: "archived",
+          updatedAt: nowIso(),
+        });
+        writeJSON(LS.posts, posts);
+      }
+      return posts[idx];
+    },
+    restorePost(id) {
+      const posts = this.getAllPosts();
+      const idx = posts.findIndex((p) => p.id === id);
+      if (idx < 0) return null;
+      const restored = Object.assign({}, posts[idx]);
+      restored.status = restored.previousStatus || "draft";
+      delete restored.previousStatus;
+      restored.updatedAt = nowIso();
+      posts[idx] = restored;
+      writeJSON(LS.posts, posts);
+      return restored;
     },
 
     /* ---- categories ---- */
@@ -431,9 +458,7 @@
     login(username, password) {
       const realUser = localStorage.getItem(LS.authUser) || "admin";
       const realPass = localStorage.getItem(LS.auth) || "admin123";
-      const userOk = String(username || "").trim().toLowerCase() === realUser.toLowerCase();
-      const passOk = password === realPass;
-      if (userOk && passOk) {
+      if (username === realUser && password === realPass) {
         sessionStorage.setItem(SESSION_KEY, "1");
         return true;
       }
@@ -448,15 +473,11 @@
     getUsername() {
       return localStorage.getItem(LS.authUser) || "admin";
     },
+    changeUsername(newUser) {
+      localStorage.setItem(LS.authUser, newUser);
+    },
     changePassword(newPass) {
       localStorage.setItem(LS.auth, newPass);
-    },
-    changeUsername(newUser) {
-      localStorage.setItem(LS.authUser, String(newUser || "").trim() || "admin");
-    },
-    changeCredentials(newUser, newPass) {
-      if (newUser) this.changeUsername(newUser);
-      if (newPass) this.changePassword(newPass);
     },
     /* Persistent (not session-based) flag set the first time you log in
        successfully on a given browser. Lets the public site show the
