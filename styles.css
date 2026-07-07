@@ -338,6 +338,13 @@ ul{ margin:0; padding:0; list-style:none; }
 .article-body.is-poem{ white-space: pre-line; font-style: italic; font-size: 20px; }
 .article-body.is-poem > p:first-of-type::first-letter{ all: unset; }
 
+.post-footer{
+  margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--line);
+  font-family: var(--serif-body); font-style: italic; color: var(--text-muted); font-size: 16px; line-height: 1.75;
+  max-width: 68ch;
+}
+.post-footer p{ margin: 0 0 .8em; }
+.post-footer p:last-child{ margin-bottom: 0; }
 .share-row{ display:flex; align-items:center; gap:12px; margin: 40px 0; padding: 22px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); flex-wrap:wrap; }
 .share-row span{ font-family: var(--sans); font-size:13px; color: var(--text-muted); }
 .share-btn{
