@@ -457,8 +457,8 @@
 
     /* ---- auth ---- */
     login(username, password) {
-      const realUser = localStorage.getItem(LS.authUser) || "admin";
-      const realPass = localStorage.getItem(LS.auth) || "admin123";
+      const realUser = localStorage.getItem(LS.authUser) || "ixxvimmv";
+      const realPass = localStorage.getItem(LS.auth) || "karyzza0126!";
       if (username === realUser && password === realPass) {
         sessionStorage.setItem(SESSION_KEY, "1");
         return true;
