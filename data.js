@@ -570,9 +570,22 @@
       writeJSON(LS.views, []);
     },
 
-    /* ---- site settings (e.g. About page photo) ---- */
+    /* ---- site settings (e.g. About page content) ---- */
     getSettings() {
-      return readJSON(LS.settings, { aboutPhoto: "" });
+      const DEFAULTS = {
+        aboutPhoto: "",
+        aboutEyebrow: "About the writer",
+        aboutHeading: "I write things down so I don't have to carry them alone.",
+        aboutLede: "If No One Reads This started as a private folder of unfinished drafts and slowly, almost against my will, became a public one.",
+        aboutContent:
+          "<p>I've kept some form of journal since year 2020, mostly out of necessity rather than discipline — I've always needed to write things down before I fully understood how I felt about them.</p><p>The name comes from the only way I've ever been able to write anything honest: by half-convincing myself no one would actually read it. If No One Reads This is what happened when I got tired of being the only reader of things I suspected other people might need too.</p><p class=\"pull-line\">\"I'm not trying to have the last word on anything. I'm just trying to say the true thing before I forget what it felt like.\"</p><p>What you'll find here is a mix: letters, personal reflections, journal entries kept mostly intact, a handful of poems, and short stories that are fiction in name only.</p><p>I don't publish on a schedule. I publish when something has finished the slow work of becoming a sentence instead of just a feeling. If you're here, I'm glad. There's no rush to any of this.</p>",
+        aboutValues: [
+          { title: "Slowness on purpose", description: "Nothing here is written to a content calendar. A piece is published when it's ready, not before." },
+          { title: "Honesty over polish", description: "I'd rather a sentence be true and a little rough than smooth and slightly false." },
+          { title: "Room for you in it", description: "The most personal writing is often the most shareable. I try to leave space for your own story inside mine." },
+        ],
+      };
+      return Object.assign({}, DEFAULTS, readJSON(LS.settings, {}));
     },
     saveSettings(partial) {
       const current = this.getSettings();
