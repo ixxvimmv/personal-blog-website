@@ -484,13 +484,21 @@ function viewPost(params){
       <div>
         <div class="article-body" id="article-body">${post.content}</div>
 
-        <div class="share-row">
+        ${post.footer ? `<div class="post-footer" data-reveal>${post.footer}</div>` : ''}
+
+        <div class="share-row" id="share-row">
           <span>Share this piece</span>
+          <button class="share-btn" data-share="native" aria-label="Share…" title="Share…" id="native-share-btn" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg></button>
           <button class="share-btn" data-share="twitter" aria-label="Share on X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23.3 22h-7l-5.5-7.2L4.5 22H1.3l8.1-9.3L1 2h7.2l5 6.6L18.9 2zm-1.2 18h1.7L7.4 4H5.6l12.1 16z"/></svg></button>
           <button class="share-btn" data-share="facebook" aria-label="Share on Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8.4h2.8l.4-3.3h-3.2V7.1c0-.9.3-1.6 1.6-1.6h1.7V2.5C16.5 2.4 15.4 2.3 14.2 2.3c-2.6 0-4.4 1.6-4.4 4.5v2.5H7v3.3h2.8V21h3.7z"/></svg></button>
+          <button class="share-btn" data-share="whatsapp" aria-label="Share on WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.5-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.4.1-.2 0-.4 0-.5C10.1 9 9.6 7.8 9.4 7.3c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 2-1.4.2-.7.2-1.2.1-1.4-.1-.1-.3-.2-.6-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.6 1.4 5.1L2 22l5.1-1.3C8.5 21.5 10.2 22 12 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18.3c-1.6 0-3.1-.4-4.5-1.2l-.3-.2-3.3.9.9-3.2-.2-.3C3.7 14.9 3.2 13.5 3.2 12 3.2 7.2 7.2 3.2 12 3.2S20.8 7.2 20.8 12 16.8 20.3 12 20.3z"/></svg></button>
+          <button class="share-btn" data-share="instagram" aria-label="Share to Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></button>
           <button class="share-btn" data-share="linkedin" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3V9zm7 0h3.8v1.7h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.75V21h-4v-5.85c0-1.4-.03-3.2-1.95-3.2-1.95 0-2.25 1.5-2.25 3.1V21h-4V9z"/></svg></button>
+          <button class="share-btn" data-share="pinterest" aria-label="Share on Pinterest"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 4.2 2.6 7.8 6.3 9.3-.1-.8-.2-2 0-2.9.2-.8 1.3-5.6 1.3-5.6s-.3-.7-.3-1.6c0-1.5.9-2.7 2-2.7.9 0 1.4.7 1.4 1.6 0 .9-.6 2.3-.9 3.6-.3 1.1.5 2 1.6 2 1.9 0 3.2-2.4 3.2-5.3 0-2.2-1.5-3.8-4.2-3.8-3 0-4.9 2.3-4.9 4.8 0 .9.3 1.5.7 2 .1.2.2.3.1.5l-.2 1c-.1.2-.2.3-.5.2-1.3-.5-1.9-2-1.9-3.6 0-2.7 2.3-5.9 6.8-5.9 3.6 0 6 2.6 6 5.5 0 3.7-2.1 6.5-5.1 6.5-1 0-2-.6-2.3-1.2l-.7 2.5c-.2.9-.7 1.9-1.2 2.6.9.3 1.9.4 2.9.4 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg></button>
+          <button class="share-btn" data-share="telegram" aria-label="Share on Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 2.7 11.8c-1.3.5-1.3 1.2-.2 1.5l4.9 1.5 1.9 5.8c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.8 3.5c.9.5 1.5.2 1.7-.8l3.1-14.5c.3-1.3-.4-1.9-1.1-1.6zM8.3 14.3l9.6-6c.4-.3.8-.1.5.2l-8.1 7.3-.3 3.2-1.4-4.2z"/></svg></button>
+          <button class="share-btn" data-share="email" aria-label="Share via Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 7 12 13 22 7"/></svg></button>
           <button class="share-btn" data-share="copy" aria-label="Copy link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg></button>
-          <span id="copy-note" style="display:none;color:var(--accent-2);font-family:var(--sans);font-size:13px;">Link copied.</span>
+          <span id="copy-note" style="display:none;color:var(--accent-2);font-family:var(--sans);font-size:13px;"></span>
         </div>
 
         <div class="post-nav">
@@ -627,25 +635,62 @@ function wireDynamic(){
     document.addEventListener('scroll', updateRibbon, { passive:true });
     updateRibbon();
   }
+  const nativeShareBtn = document.getElementById('native-share-btn');
+  if (nativeShareBtn && navigator.share){
+    nativeShareBtn.style.display = '';
+  }
   document.querySelectorAll('[data-share]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const url = encodeURIComponent(location.href);
-      const title = encodeURIComponent(document.querySelector('.post-hero h1')?.textContent || 'If No One Reads This');
+      const rawUrl = location.href;
+      const url = encodeURIComponent(rawUrl);
+      const rawTitle = document.querySelector('.post-hero h1')?.textContent || 'If No One Reads This';
+      const title = encodeURIComponent(rawTitle);
       const kind = btn.dataset.share;
+      const note = document.getElementById('copy-note');
+      function showNote(text, ms){
+        note.textContent = text;
+        note.style.display = 'inline';
+        clearTimeout(note.__t);
+        note.__t = setTimeout(() => note.style.display = 'none', ms || 3200);
+      }
+      function copyLink(){
+        navigator.clipboard?.writeText(rawUrl);
+      }
+
       if (kind === 'copy'){
-        navigator.clipboard?.writeText(location.href).then(() => {
-          const note = document.getElementById('copy-note');
-          note.style.display = 'inline';
-          setTimeout(() => note.style.display = 'none', 2200);
-        });
+        copyLink();
+        showNote('Link copied.', 2200);
+        return;
+      }
+      if (kind === 'native'){
+        navigator.share({ title: rawTitle, url: rawUrl }).catch(() => {});
+        return;
+      }
+      if (kind === 'instagram'){
+        // Instagram has no public web share URL — the honest options are the
+        // OS share sheet (mobile, lets someone pick Instagram Story/DM themselves)
+        // or copying the link to paste in manually.
+        if (navigator.share){
+          navigator.share({ title: rawTitle, url: rawUrl }).catch(() => {});
+        } else {
+          copyLink();
+          showNote('Link copied — open Instagram and paste it into your Story or a Direct Message.', 5000);
+        }
+        return;
+      }
+      if (kind === 'email'){
+        window.location.href = `mailto:?subject=${title}&body=${encodeURIComponent(rawTitle + '\n\n' + rawUrl)}`;
         return;
       }
       const shareUrls = {
         twitter: `https://twitter.com/intent/tweet?text=${title}&url=${url}`,
         facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+        whatsapp: `https://wa.me/?text=${title}%20${url}`,
         linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+        pinterest: `https://pinterest.com/pin/create/button/?url=${url}&description=${title}`,
+        telegram: `https://t.me/share/url?url=${url}&text=${title}`,
       };
-      window.open(shareUrls[kind], '_blank', 'noopener,width=600,height=500');
+      if (shareUrls[kind]) window.open(shareUrls[kind], '_blank', 'noopener,width=600,height=500');
     });
   });
 }
