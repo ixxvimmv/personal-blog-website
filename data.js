@@ -264,8 +264,8 @@
     writeJSON(LS.tags, DEFAULT_TAGS);
     writeJSON(LS.posts, DEFAULT_POSTS);
     writeJSON(LS.media, []);
-    localStorage.setItem(LS.authUser, "admin");
-    localStorage.setItem(LS.auth, "admin123");
+    localStorage.setItem(LS.authUser, "ixxvimmv");
+    localStorage.setItem(LS.auth, "karyzza0126!");
     writeJSON(LS.seeded, true);
   }
 
